@@ -194,14 +194,21 @@
     border: 1px solid var(--border-2);
     box-shadow: var(--shadow-s);
     margin-bottom: calc(3px + var(--lift, 0px));
+    transform: translateX(var(--dx, 0px));
     transition: opacity .15s;
   }
-  /* leader line back down to the pin when a label was lifted clear of a neighbour */
+  /* leader line back down to the pin when a label was lifted straight up */
   .pin .label::after {
     content: ""; position: absolute; top: 100%; right: 50%;
     width: 1px; height: var(--lift, 0px);
     background: var(--border-2);
   }
+  .pin.off .label::after { display: none; }
+  /* no room at this zoom: the pin stays, the name appears on demand */
+  .pin.nolabel .label { opacity: 0; }
+  .pin.nolabel:hover .label,
+  .pin.nolabel:focus-within .label,
+  .pin.nolabel.sel .label { opacity: 1; }
   .pin[data-role="base"] { z-index: 3; }
   .pin.sel, .pin:hover, .pin:focus-within { z-index: 8; }
   .pin .head {
@@ -877,36 +884,73 @@
     resolveLabels();
   }
 
-  /* Nudge overlapping labels straight up (a leader line keeps them tied to their pin),
-     so nothing is ever hidden behind a neighbour. */
+  /* Label placement. Each label tries a ring of candidate offsets around its pin and
+     takes the first that collides with nothing already placed. Bases get first pick.
+     If a secondary place finds no free spot it drops its label and reveals it on hover,
+     so a label is never silently buried under another. */
+  var CANDIDATES = [
+    { x: 0, y: 0 },
+    { x: 54, y: 0 }, { x: -54, y: 0 },
+    { x: 0, y: 20 }, { x: 48, y: 20 }, { x: -48, y: 20 },
+    { x: 0, y: 40 }, { x: 62, y: 40 }, { x: -62, y: 40 },
+    { x: 0, y: 62 }, { x: 70, y: 62 }, { x: -70, y: 62 }
+  ];
+
   function resolveLabels() {
     var pins = [].slice.call(pinsEl.querySelectorAll(".pin"));
-    pins.forEach(function (p) { p.style.setProperty("--lift", "0px"); });
+    pins.forEach(function (p) {
+      p.style.setProperty("--lift", "0px");
+      p.style.setProperty("--dx", "0px");
+      p.classList.remove("off", "nolabel");
+    });
 
-    var entries = pins.map(function (p) {
-      var lb = p.querySelector(".label");
-      return { pin: p, lb: lb, top: lb.getBoundingClientRect().top };
-    }).sort(function (a, b) { return a.top - b.top; });
+    // bases claim the prime spots; day trips and points of interest yield
+    var order = pins.slice().sort(function (a, b) {
+      var ra = a.getAttribute("data-role") === "base" ? 0 : 1;
+      var rb = b.getAttribute("data-role") === "base" ? 0 : 1;
+      if (ra !== rb) return ra - rb;
+      return a.querySelector(".label").getBoundingClientRect().top -
+             b.querySelector(".label").getBoundingClientRect().top;
+    });
 
     var placed = [];
-    function hits(r) {
+    function free(r) {
       for (var i = 0; i < placed.length; i++) {
         var q = placed[i];
         if (!(r.right < q.left - 3 || r.left > q.right + 3 ||
-              r.bottom < q.top - 2 || r.top > q.bottom + 2)) return true;
+              r.bottom < q.top - 2 || r.top > q.bottom + 2)) return false;
       }
-      return false;
+      return true;
     }
-    entries.forEach(function (e) {
-      var lift = 0, guard = 0;
-      var r = e.lb.getBoundingClientRect();
-      while (hits(r) && guard < 14) {
-        lift += 15;
-        e.pin.style.setProperty("--lift", lift + "px");
-        r = e.lb.getBoundingClientRect();
-        guard++;
+
+    order.forEach(function (pin) {
+      var lb = pin.querySelector(".label");
+      var isBase = pin.getAttribute("data-role") === "base";
+      var fitted = false;
+
+      for (var i = 0; i < CANDIDATES.length; i++) {
+        var c = CANDIDATES[i];
+        pin.style.setProperty("--lift", c.y + "px");
+        pin.style.setProperty("--dx", c.x + "px");
+        var r = lb.getBoundingClientRect();
+        if (free(r)) {
+          if (c.x !== 0) pin.classList.add("off");   // sits beside the pin, no vertical leader
+          placed.push({ left: r.left, right: r.right, top: r.top, bottom: r.bottom });
+          fitted = true;
+          break;
+        }
       }
-      placed.push({ left: r.left, right: r.right, top: r.top, bottom: r.bottom });
+
+      if (!fitted) {
+        pin.style.setProperty("--lift", "0px");
+        pin.style.setProperty("--dx", "0px");
+        if (isBase) {
+          // never hide a base: keep it, just accept it sits on top
+          placed.push(lb.getBoundingClientRect());
+        } else {
+          pin.classList.add("nolabel");            // revealed on hover / focus / selection
+        }
+      }
     });
   }
 
