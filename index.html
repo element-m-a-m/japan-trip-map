@@ -995,15 +995,31 @@
     clearTimeout(relayoutT);
     relayoutT = setTimeout(resolveLabels, 520);
   }
+  /* The 3D tilt magnifies the near edge, so the drawn size is not the layout size.
+     Measure what actually landed on screen and scale it to sit inside the frame. */
+  function fitView() {
+    var mw = document.querySelector(".mapwrap").getBoundingClientRect();
+    var land = document.getElementById("g-land").getBoundingClientRect();
+    if (!land.width || !land.height || !mw.width) return;
+    var ratio = Math.min((mw.width * 0.88) / land.width, (mw.height * 0.86) / land.height);
+    S.view.zoom = Math.max(0.35, Math.min(2.5, S.view.zoom * ratio));
+    S.view.x = 0; S.view.y = 0;
+    applyView();
+  }
+
   window.addEventListener("resize", function () {
     clearTimeout(relayoutT);
-    relayoutT = setTimeout(resolveLabels, 220);
+    relayoutT = setTimeout(function () { fitView(); resolveLabels(); }, 220);
   });
 
   document.getElementById("btn-tilt").addEventListener("click", function () { S.view.tilt = S.view.tilt ? 0 : 1; applyView(); save(); });
   document.getElementById("btn-zin").addEventListener("click", function () { S.view.zoom = Math.min(3.2, S.view.zoom * 1.28); applyView(); save(); });
   document.getElementById("btn-zout").addEventListener("click", function () { S.view.zoom = Math.max(0.55, S.view.zoom / 1.28); applyView(); save(); });
-  document.getElementById("btn-reset").addEventListener("click", function () { S.view = { tilt: 1, zoom: 1, x: 0, y: 0 }; applyView(); save(); });
+  document.getElementById("btn-reset").addEventListener("click", function () {
+    S.view = { tilt: 1, zoom: 1, x: 0, y: 0 };
+    applyView();
+    setTimeout(function () { fitView(); resolveLabels(); save(); }, 30);
+  });
 
   var drag = null;
   plane.addEventListener("pointerdown", function (e) {
@@ -1565,14 +1581,23 @@
     if (S.tab === "sync") renderSync();
   }
 
-  var hadLocal = false;
-  try { hadLocal = !!localStorage.getItem(KEY); } catch (e) {}
+  var hadLocal = false, hadView = false;
+  try {
+    var rawLS = localStorage.getItem(KEY);
+    hadLocal = !!rawLS;
+    hadView = !!(rawLS && JSON.parse(rawLS).view);
+  } catch (e) {}
 
   load();
   buildMap();
   applyView();
   setTab("coach");
   render();
+
+  // first run: frame the map to whatever space this screen actually has
+  if (!hadView) {
+    setTimeout(function () { fitView(); resolveLabels(); save(); }, 60);
+  }
 
   // First visit on the hosted version: adopt the shared plan from the cloud.
   if (!hadLocal && (location.protocol === "http:" || location.protocol === "https:")) {
