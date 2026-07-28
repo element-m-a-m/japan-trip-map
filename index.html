@@ -995,10 +995,17 @@
     plane.style.setProperty("--panx", S.view.x + "px");
     plane.style.setProperty("--pany", S.view.y + "px");
     document.getElementById("btn-tilt").classList.toggle("on", !!S.view.tilt);
-    // spacing between pins changes with zoom/tilt, so re-space the labels once it settles
+    // Pin spacing changes with zoom/tilt. Labels must be measured only once the
+    // transform has finished animating, otherwise we place them against mid-flight
+    // positions; transitionend is the real signal, the timer is just a fallback.
     clearTimeout(relayoutT);
-    relayoutT = setTimeout(resolveLabels, 520);
+    relayoutT = setTimeout(resolveLabels, 620);
   }
+  plane.addEventListener("transitionend", function (e) {
+    if (e.propertyName !== "transform" || e.target !== plane) return;
+    clearTimeout(relayoutT);
+    resolveLabels();
+  });
   /* The 3D tilt magnifies the near edge, so the drawn size is not the layout size.
      Measure what actually landed on screen and scale it to sit inside the frame. */
   function fitView() {
@@ -1022,7 +1029,7 @@
   document.getElementById("btn-reset").addEventListener("click", function () {
     S.view = { tilt: 1, zoom: 1, x: 0, y: 0 };
     applyView();
-    setTimeout(function () { fitView(); resolveLabels(); save(); }, 30);
+    setTimeout(function () { fitView(); save(); }, 30);
   });
 
   var drag = null;
@@ -1599,8 +1606,9 @@
   render();
 
   // first run: frame the map to whatever space this screen actually has
+  // (fitView triggers the transform, and the relayout follows its transitionend)
   if (!hadView) {
-    setTimeout(function () { fitView(); resolveLabels(); save(); }, 60);
+    setTimeout(function () { fitView(); save(); }, 60);
   }
 
   // First visit on the hosted version: adopt the shared plan from the cloud.
