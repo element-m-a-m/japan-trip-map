@@ -1,0 +1,77 @@
+{
+  "app": "japan-map-planner",
+  "v": 1,
+  "baseline": "24.07.2026",
+  "exportedAt": "2026-07-24T09:00:00.000Z",
+  "items": [
+    {
+      "id": "sd1",
+      "pid": "tokyo",
+      "cat": "lodging",
+      "name": "מלון בטוקיו",
+      "nights": 5,
+      "est": 4000,
+      "state": "idea"
+    },
+    {
+      "id": "sd2",
+      "pid": "kyoto",
+      "cat": "lodging",
+      "name": "מלון בקיוטו",
+      "nights": 5,
+      "est": 5000,
+      "state": "idea"
+    },
+    {
+      "id": "sd3",
+      "pid": "tokyo",
+      "cat": "experience",
+      "name": "teamLab (לשניים)",
+      "est": 160,
+      "state": "idea"
+    },
+    {
+      "id": "sd4",
+      "pid": "nagoya",
+      "cat": "experience",
+      "name": "פארק ג׳יבלי (לשניים)",
+      "est": 200,
+      "state": "idea"
+    },
+    {
+      "id": "sd5",
+      "pid": "osaka",
+      "cat": "experience",
+      "name": "USJ (לשניים)",
+      "est": 345,
+      "state": "idea"
+    },
+    {
+      "id": "sd6",
+      "pid": "tokyo",
+      "cat": "experience",
+      "name": "סיור אורוות סומו (לשניים)",
+      "est": 480,
+      "state": "idea"
+    },
+    {
+      "id": "sd7",
+      "pid": "kyoto",
+      "cat": "intercity",
+      "name": "שינקנסן טוקיו-קיוטו (לשניים)",
+      "est": 560,
+      "state": "idea"
+    },
+    {
+      "id": "sd8",
+      "pid": "hakone",
+      "cat": "lodging",
+      "name": "לילה בריוקאן עם אונסן",
+      "nights": 1,
+      "est": 900,
+      "state": "idea"
+    }
+  ],
+  "custom": [],
+  "order": {}
+}

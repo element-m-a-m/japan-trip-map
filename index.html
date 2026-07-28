@@ -1,0 +1,1315 @@
+<title>מפת התכנון ליפן 2026</title>
+<style>
+  :root {
+    --indigo: #2A3B5C;
+    --indigo-br: #4E6FA8;
+    --momiji: #B8452F;
+    --ginkgo: #C08A2E;
+    --jade: #2F7D6B;
+    --jade-br: #3FA189;
+
+    --bg: #EEF0F4;
+    --surface: #FFFFFF;
+    --surface-2: #F7F8FA;
+    --surface-3: #EDEFF3;
+    --text: #171C26;
+    --muted: #5C6577;
+    --faint: #8A93A5;
+    --border: #DCE0E8;
+    --border-2: #C3CAD6;
+
+    --sea-1: #DCE4F0;
+    --sea-2: #C6D3E6;
+    --land-1: #FBFAF7;
+    --land-2: #E8E4DA;
+    --land-edge: #A9B3C4;
+    --grid: rgba(42, 59, 92, .10);
+
+    --shadow-s: 0 1px 2px rgba(23, 28, 38, .06);
+    --shadow-m: 0 4px 16px -6px rgba(23, 28, 38, .22);
+    --shadow-l: 0 18px 50px -24px rgba(23, 28, 38, .5);
+
+    --he: "Segoe UI", "Noto Sans Hebrew", "Arial Hebrew", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --indigo: #7B9AD0; --indigo-br: #9DB6DF;
+      --momiji: #E0765C; --ginkgo: #D9A84E;
+      --jade: #4FB49C; --jade-br: #6ECBB5;
+      --bg: #0E1118; --surface: #171B24; --surface-2: #12161E; --surface-3: #1E2430;
+      --text: #E9ECF2; --muted: #98A1B3; --faint: #6B7486;
+      --border: #262D3B; --border-2: #38414F;
+      --sea-1: #0C1420; --sea-2: #131F31;
+      --land-1: #2A3140; --land-2: #1F2531;
+      --land-edge: #46536B; --grid: rgba(123, 154, 208, .10);
+      --shadow-s: 0 1px 2px rgba(0,0,0,.4);
+      --shadow-m: 0 4px 16px -6px rgba(0,0,0,.6);
+      --shadow-l: 0 18px 50px -24px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"] {
+    --indigo: #7B9AD0; --indigo-br: #9DB6DF;
+    --momiji: #E0765C; --ginkgo: #D9A84E;
+    --jade: #4FB49C; --jade-br: #6ECBB5;
+    --bg: #0E1118; --surface: #171B24; --surface-2: #12161E; --surface-3: #1E2430;
+    --text: #E9ECF2; --muted: #98A1B3; --faint: #6B7486;
+    --border: #262D3B; --border-2: #38414F;
+    --sea-1: #0C1420; --sea-2: #131F31;
+    --land-1: #2A3140; --land-2: #1F2531;
+    --land-edge: #46536B; --grid: rgba(123, 154, 208, .10);
+    --shadow-s: 0 1px 2px rgba(0,0,0,.4);
+    --shadow-m: 0 4px 16px -6px rgba(0,0,0,.6);
+    --shadow-l: 0 18px 50px -24px rgba(0,0,0,.9);
+  }
+  :root[data-theme="light"] {
+    --indigo: #2A3B5C; --indigo-br: #4E6FA8;
+    --momiji: #B8452F; --ginkgo: #C08A2E;
+    --jade: #2F7D6B; --jade-br: #3FA189;
+    --bg: #EEF0F4; --surface: #FFFFFF; --surface-2: #F7F8FA; --surface-3: #EDEFF3;
+    --text: #171C26; --muted: #5C6577; --faint: #8A93A5;
+    --border: #DCE0E8; --border-2: #C3CAD6;
+    --sea-1: #DCE4F0; --sea-2: #C6D3E6;
+    --land-1: #FBFAF7; --land-2: #E8E4DA;
+    --land-edge: #A9B3C4; --grid: rgba(42, 59, 92, .10);
+    --shadow-s: 0 1px 2px rgba(23,28,38,.06);
+    --shadow-m: 0 4px 16px -6px rgba(23,28,38,.22);
+    --shadow-l: 0 18px 50px -24px rgba(23,28,38,.5);
+  }
+
+  * { box-sizing: border-box; }
+
+  .app {
+    direction: rtl;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--he);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  bdi, .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; }
+
+  /* ================= TOPBAR ================= */
+  .topbar {
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+    padding: 12px clamp(12px, 2.5vw, 22px);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 40;
+  }
+  .brand { display: flex; flex-direction: column; gap: 1px; margin-inline-end: auto; }
+  .brand h1 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+  .brand .sub { font-size: 11.5px; color: var(--faint); }
+
+  .stat-strip { display: flex; gap: 10px; flex-wrap: wrap; }
+  .stat {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 4px; padding: 6px 11px; min-width: 96px;
+    display: flex; flex-direction: column; gap: 1px;
+  }
+  .stat .lab { font-size: 10px; letter-spacing: .08em; color: var(--faint); font-weight: 700; }
+  .stat .val { font-family: var(--mono); font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; direction: ltr; text-align: right; }
+  .stat.paid .val { color: var(--jade); }
+  .stat.plan .val { color: var(--momiji); }
+  .stat.left .val { color: var(--indigo); }
+
+  /* ================= LAYOUT ================= */
+  .main { display: flex; flex: 1; min-height: 0; align-items: stretch; }
+  @media (max-width: 940px) { .main { flex-direction: column; } }
+
+  .panel {
+    width: 400px; flex: 0 0 400px;
+    background: var(--surface);
+    border-inline-start: 1px solid var(--border);
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  @media (max-width: 940px) { .panel { width: auto; flex: 1 1 auto; border-inline-start: 0; border-top: 1px solid var(--border); } }
+
+  .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  .tab {
+    flex: 1; padding: 11px 6px; background: none; border: 0; cursor: pointer;
+    font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--muted);
+    border-bottom: 2px solid transparent; transition: color .15s, border-color .15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab[aria-selected="true"] { color: var(--indigo); border-bottom-color: var(--indigo); background: var(--surface); }
+  .tab:focus-visible { outline: 2px solid var(--indigo); outline-offset: -3px; }
+
+  .tabpanel { padding: 16px; overflow-y: auto; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; }
+  @media (max-width: 940px) { .tabpanel { max-height: 62vh; } }
+  .tabpanel[hidden] { display: none; }
+
+  /* ================= MAP ================= */
+  .mapwrap { flex: 1; position: relative; min-height: 420px; overflow: hidden; background: linear-gradient(170deg, var(--sea-1), var(--sea-2)); }
+  @media (max-width: 940px) { .mapwrap { min-height: 400px; flex: 0 0 52vh; } }
+
+  .stage { position: absolute; inset: 0; perspective: 1400px; perspective-origin: 50% 42%; }
+
+  .plane {
+    position: absolute; left: 50%; top: 50%;
+    height: min(80%, 600px);
+    transform-style: preserve-3d;
+    transform:
+      translate(-50%, -50%)
+      translate(var(--panx), var(--pany))
+      rotateX(var(--tilt))
+      scale(var(--zoom));
+    transition: transform .5s cubic-bezier(.22,.8,.3,1);
+    will-change: transform;
+  }
+  .plane.dragging { transition: none; }
+
+  .mapsvg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .land { fill: url(#landgrad); stroke: var(--land-edge); stroke-width: 1.6; stroke-linejoin: round; }
+  .gridline { stroke: var(--grid); stroke-width: 1; fill: none; }
+  .routeline { fill: none; stroke: var(--momiji); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1 11; opacity: .95; }
+  .routeline.solid { stroke-dasharray: none; opacity: .55; stroke-width: 2.4; }
+
+  .pins { position: absolute; inset: 0; transform-style: preserve-3d; }
+
+  .pin {
+    position: absolute; transform-origin: 50% 100%;
+    transform: translate(-50%, -100%) rotateX(calc(-1 * var(--tilt)));
+    background: none; border: 0; padding: 0; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 0;
+    font-family: inherit; z-index: 2;
+  }
+  .pin:focus-visible { outline: none; }
+  .pin:focus-visible .head { outline: 2px solid var(--text); outline-offset: 2px; }
+
+  .pin .label {
+    font-size: 11.5px; font-weight: 700; white-space: nowrap;
+    padding: 2px 7px; border-radius: 3px;
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border-2);
+    box-shadow: var(--shadow-s);
+    margin-bottom: 3px;
+    transition: transform .15s;
+  }
+  .pin .head {
+    width: 15px; height: 15px; border-radius: 50%;
+    border: 2.5px solid var(--surface);
+    background: var(--faint);
+    box-shadow: var(--shadow-m);
+    transition: transform .15s, background .2s;
+  }
+  .pin .stem { width: 2px; height: 16px; background: linear-gradient(to bottom, var(--border-2), transparent); }
+
+  .pin[data-role="airport"] .head { border-radius: 2px; transform: rotate(45deg); }
+  .pin[data-state="chosen"] .head { background: var(--momiji); width: 19px; height: 19px; }
+  .pin[data-state="booked"] .head { background: var(--jade); width: 19px; height: 19px; }
+  .pin[data-state="chosen"] .label, .pin[data-state="booked"] .label { border-color: currentColor; }
+  .pin[data-state="chosen"] .label { color: var(--momiji); }
+  .pin[data-state="booked"] .label { color: var(--jade); }
+  .pin.sel .head { box-shadow: 0 0 0 5px color-mix(in srgb, var(--indigo) 30%, transparent), var(--shadow-m); }
+  .pin.sel .label { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+  .pin:hover .head { transform: scale(1.25); }
+  .pin[data-role="airport"]:hover .head { transform: rotate(45deg) scale(1.25); }
+  .pin:hover { z-index: 5; }
+
+  .shadow-dot {
+    position: absolute; width: 16px; height: 6px; border-radius: 50%;
+    background: rgba(0,0,0,.22); filter: blur(2px);
+    transform: translate(-50%, -50%); pointer-events: none; z-index: 1;
+  }
+
+  .badge-n {
+    position: absolute; top: -5px; inset-inline-end: -7px;
+    background: var(--ginkgo); color: #16181d;
+    font-family: var(--mono); font-size: 9.5px; font-weight: 700;
+    min-width: 15px; height: 15px; border-radius: 8px;
+    display: grid; place-items: center; padding: 0 3px;
+    border: 2px solid var(--surface);
+  }
+
+  /* map controls */
+  .mapctl {
+    position: absolute; inset-block-start: 12px; inset-inline-start: 12px; z-index: 20;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .mapctl button {
+    width: 34px; height: 34px; border-radius: 4px;
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border-2); cursor: pointer;
+    font-family: inherit; font-size: 15px; font-weight: 700;
+    display: grid; place-items: center; box-shadow: var(--shadow-s);
+    transition: background .15s;
+  }
+  .mapctl button:hover { background: var(--surface-3); }
+  .mapctl button:focus-visible { outline: 2px solid var(--indigo); outline-offset: 1px; }
+  .mapctl button.on { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+
+  .legend {
+    position: absolute; inset-block-end: 12px; inset-inline-start: 12px; z-index: 20;
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 9px 12px; display: flex; flex-direction: column; gap: 5px;
+    font-size: 11.5px; color: var(--muted); box-shadow: var(--shadow-s);
+    backdrop-filter: blur(6px);
+  }
+  .legend div { display: flex; align-items: center; gap: 7px; }
+  .legend .sw { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+
+  .addhint {
+    position: absolute; inset-block-start: 12px; inset-inline-end: 12px; z-index: 25;
+    background: var(--ginkgo); color: #16181d;
+    padding: 7px 13px; border-radius: 4px; font-size: 12.5px; font-weight: 700;
+    box-shadow: var(--shadow-m);
+  }
+  .addhint[hidden] { display: none; }
+
+  /* ================= PANEL WIDGETS ================= */
+  .card {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 5px; padding: 14px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .card > h3 {
+    margin: 0; font-size: 11.5px; letter-spacing: .1em;
+    color: var(--faint); font-weight: 700;
+  }
+
+  /* budget bar */
+  .bbar { height: 26px; border-radius: 4px; background: var(--surface-3); position: relative; overflow: hidden; border: 1px solid var(--border); }
+  .bbar .seg { position: absolute; top: 0; bottom: 0; }
+  .bbar .seg.paid { background: var(--jade); right: 0; }
+  .bbar .seg.plan { background: repeating-linear-gradient(-45deg, var(--momiji) 0 5px, color-mix(in srgb, var(--momiji) 60%, transparent) 5px 10px); }
+  .tickrow { position: relative; height: 24px; }
+  .tick { position: absolute; top: 0; transform: translateX(50%); font-size: 10px; color: var(--faint); white-space: nowrap; }
+  .tick::before { content: ""; position: absolute; top: -32px; right: 50%; width: 2px; height: 30px; background: var(--text); opacity: .55; }
+  .tick.b::before { background: var(--momiji); opacity: .9; }
+  .tick.a::before { background: var(--indigo); opacity: .9; }
+
+  .verdict {
+    padding: 10px 12px; border-radius: 4px; font-size: 14px; font-weight: 700;
+    border: 1px solid; display: flex; align-items: center; gap: 8px;
+  }
+  .verdict.ok { color: var(--jade); border-color: color-mix(in srgb, var(--jade) 40%, transparent); background: color-mix(in srgb, var(--jade) 10%, transparent); }
+  .verdict.mid { color: var(--ginkgo); border-color: color-mix(in srgb, var(--ginkgo) 40%, transparent); background: color-mix(in srgb, var(--ginkgo) 10%, transparent); }
+  .verdict.over { color: var(--momiji); border-color: color-mix(in srgb, var(--momiji) 40%, transparent); background: color-mix(in srgb, var(--momiji) 10%, transparent); }
+
+  /* category rows */
+  .catrow { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; border-top: 1px solid var(--border); }
+  .catrow:first-of-type { border-top: 0; }
+  .catrow .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13.5px; }
+  .catrow .nums { font-family: var(--mono); font-size: 12px; color: var(--muted); direction: ltr; font-variant-numeric: tabular-nums; }
+  .meter { height: 6px; border-radius: 3px; background: var(--surface-3); overflow: hidden; display: flex; }
+  .meter i { display: block; height: 100%; }
+  .meter i.p { background: var(--jade); }
+  .meter i.c { background: color-mix(in srgb, var(--momiji) 70%, transparent); }
+  .catrow.over .nums { color: var(--momiji); font-weight: 700; }
+
+  /* coach steps */
+  .step {
+    display: flex; gap: 10px; padding: 11px 12px; border-radius: 4px;
+    border: 1px solid var(--border); background: var(--surface);
+    align-items: flex-start;
+  }
+  .step.hot { border-color: color-mix(in srgb, var(--momiji) 50%, transparent); background: color-mix(in srgb, var(--momiji) 7%, transparent); }
+  .step.done { opacity: .55; }
+  .step .ic { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; background: var(--surface-3); color: var(--muted); margin-top: 1px; }
+  .step.hot .ic { background: var(--momiji); color: #fff; }
+  .step.done .ic { background: var(--jade); color: #fff; }
+  .step .body { display: flex; flex-direction: column; gap: 3px; }
+  .step .t { font-size: 14px; font-weight: 700; }
+  .step .d { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+  .step .d b { color: var(--text); }
+
+  /* place detail */
+  .place-head { display: flex; flex-direction: column; gap: 4px; }
+  .place-head h2 { margin: 0; font-size: 20px; font-weight: 700; }
+  .place-head .en { font-family: var(--mono); font-size: 11.5px; color: var(--faint); direction: ltr; }
+  .place-note { margin: 0; font-size: 13.5px; color: var(--muted); }
+  .pricehint { font-size: 12.5px; color: var(--ginkgo); font-weight: 700; }
+
+  .item {
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 10px 11px; background: var(--surface);
+    display: flex; flex-direction: column; gap: 7px;
+  }
+  .item .r1 { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .item .nm { font-size: 14px; font-weight: 700; line-height: 1.35; }
+  .item .meta { font-size: 11.5px; color: var(--faint); }
+  .item .amt { font-family: var(--mono); font-size: 14px; font-weight: 700; direction: ltr; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .item[data-s="booked"] .amt { color: var(--jade); }
+  .item[data-s="chosen"] .amt { color: var(--momiji); }
+  .item[data-s="idea"] { opacity: .72; }
+  .item[data-s="idea"] .amt { color: var(--faint); }
+
+  .segbtns { display: flex; gap: 0; border: 1px solid var(--border-2); border-radius: 4px; overflow: hidden; }
+  .segbtns button {
+    flex: 1; padding: 5px 4px; border: 0; background: var(--surface-2);
+    font-family: inherit; font-size: 11.5px; font-weight: 700; color: var(--muted);
+    cursor: pointer; border-inline-start: 1px solid var(--border);
+    transition: background .15s, color .15s;
+  }
+  .segbtns button:first-child { border-inline-start: 0; }
+  .segbtns button:hover { background: var(--surface-3); }
+  .segbtns button[aria-pressed="true"] { color: #fff; }
+  .segbtns button[data-v="idea"][aria-pressed="true"] { background: var(--faint); }
+  .segbtns button[data-v="chosen"][aria-pressed="true"] { background: var(--momiji); }
+  .segbtns button[data-v="booked"][aria-pressed="true"] { background: var(--jade); }
+
+  .row { display: flex; gap: 7px; align-items: center; }
+  .row > * { min-width: 0; }
+
+  label.fld { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--faint); font-weight: 700; letter-spacing: .05em; flex: 1; }
+  input.in, select.in {
+    font-family: inherit; font-size: 13.5px; padding: 7px 9px;
+    border: 1px solid var(--border-2); border-radius: 4px;
+    background: var(--surface); color: var(--text); width: 100%;
+  }
+  input.in[type="number"] { font-family: var(--mono); direction: ltr; text-align: right; }
+  input.in:focus, select.in:focus { outline: 2px solid var(--indigo); outline-offset: -1px; border-color: var(--indigo); }
+
+  .btn {
+    font-family: inherit; font-size: 13px; font-weight: 700;
+    padding: 8px 13px; border-radius: 4px; cursor: pointer;
+    border: 1px solid var(--border-2); background: var(--surface); color: var(--text);
+    transition: background .15s, border-color .15s;
+  }
+  .btn:hover { background: var(--surface-3); }
+  .btn:focus-visible { outline: 2px solid var(--indigo); outline-offset: 1px; }
+  .btn.primary { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+  .btn.primary:hover { filter: brightness(1.12); }
+  .btn.ghost { border-color: transparent; background: none; color: var(--muted); padding: 5px 8px; font-size: 12px; }
+  .btn.ghost:hover { color: var(--momiji); background: none; }
+  .btn.sm { padding: 5px 9px; font-size: 12px; }
+
+  .empty { font-size: 13px; color: var(--faint); text-align: center; padding: 14px 8px; }
+
+  /* route list */
+  .rt { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); }
+  .rt .ord { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--momiji); width: 18px; flex: none; }
+  .rt .nm { flex: 1; font-size: 14px; font-weight: 700; }
+  .rt .ni { font-family: var(--mono); font-size: 12px; color: var(--muted); direction: ltr; }
+  .rt .mv { display: flex; flex-direction: column; gap: 1px; }
+  .rt .mv button { width: 20px; height: 15px; font-size: 9px; padding: 0; border: 1px solid var(--border); background: var(--surface-2); color: var(--muted); cursor: pointer; border-radius: 2px; font-family: inherit; }
+  .rt .mv button:hover { background: var(--surface-3); color: var(--text); }
+
+  .nights-line { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); }
+  .nights-line b { font-family: var(--mono); color: var(--text); }
+  .nightbar { height: 8px; border-radius: 4px; background: var(--surface-3); overflow: hidden; }
+  .nightbar i { display: block; height: 100%; background: var(--indigo); }
+  .nightbar i.full { background: var(--jade); }
+
+  .foot { font-size: 11.5px; color: var(--faint); text-align: center; padding-top: 6px; border-top: 1px solid var(--border); }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <h1>מפת התכנון ליפן</h1>
+      <div class="sub"><bdi>28.10-17.11.2026</bdi> · 19 לילות · חיפ ומון</div>
+    </div>
+    <div class="stat-strip">
+      <div class="stat paid"><span class="lab">שולם</span><span class="val" id="s-paid">-</span></div>
+      <div class="stat plan"><span class="lab">מתוכנן</span><span class="val" id="s-plan">-</span></div>
+      <div class="stat left"><span class="lab">נשאר לרמה ב׳</span><span class="val" id="s-left">-</span></div>
+      <div class="stat"><span class="lab">לילות מכוסים</span><span class="val" id="s-nights">-</span></div>
+    </div>
+  </header>
+
+  <div class="main">
+
+    <div class="mapwrap">
+      <div class="stage">
+        <div class="plane" id="plane">
+          <svg class="mapsvg" id="mapsvg" preserveAspectRatio="none" aria-label="מפת יפן">
+            <defs>
+              <linearGradient id="landgrad" x1="0" y1="0" x2="0.3" y2="1">
+                <stop offset="0%" stop-color="var(--land-1)"/>
+                <stop offset="100%" stop-color="var(--land-2)"/>
+              </linearGradient>
+            </defs>
+            <g id="g-grid"></g>
+            <g id="g-land"></g>
+            <g id="g-routes"></g>
+          </svg>
+          <div class="pins" id="pins"></div>
+        </div>
+      </div>
+
+      <div class="mapctl">
+        <button id="btn-tilt" class="on" title="תצוגה תלת-ממדית">3D</button>
+        <button id="btn-zin" title="התקרבות">+</button>
+        <button id="btn-zout" title="התרחקות">−</button>
+        <button id="btn-reset" title="איפוס תצוגה">⟲</button>
+        <button id="btn-add" title="הוספת מקום חדש">📍</button>
+      </div>
+
+      <div class="addhint" id="addhint" hidden>לחצו על המפה כדי למקם מקום חדש</div>
+
+      <div class="legend">
+        <div><span class="sw" style="background:var(--faint)"></span> רעיון</div>
+        <div><span class="sw" style="background:var(--momiji)"></span> נבחר</div>
+        <div><span class="sw" style="background:var(--jade)"></span> הוזמן ושולם</div>
+      </div>
+    </div>
+
+    <aside class="panel">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" id="tab-coach" aria-selected="true" aria-controls="p-coach">מה עכשיו</button>
+        <button class="tab" role="tab" id="tab-place" aria-selected="false" aria-controls="p-place">מקום</button>
+        <button class="tab" role="tab" id="tab-route" aria-selected="false" aria-controls="p-route">מסלול</button>
+        <button class="tab" role="tab" id="tab-budget" aria-selected="false" aria-controls="p-budget">תקציב</button>
+        <button class="tab" role="tab" id="tab-sync" aria-selected="false" aria-controls="p-sync">סנכרון</button>
+      </div>
+
+      <div class="tabpanel" id="p-coach" role="tabpanel" aria-labelledby="tab-coach"></div>
+      <div class="tabpanel" id="p-place" role="tabpanel" aria-labelledby="tab-place" hidden></div>
+      <div class="tabpanel" id="p-route" role="tabpanel" aria-labelledby="tab-route" hidden></div>
+      <div class="tabpanel" id="p-budget" role="tabpanel" aria-labelledby="tab-budget" hidden></div>
+      <div class="tabpanel" id="p-sync" role="tabpanel" aria-labelledby="tab-sync" hidden></div>
+    </aside>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============ CONSTANTS ============ */
+  var RATE = 50;                 // ¥50 = ₪1 (planning rate)
+  var TOTAL_NIGHTS = 19;
+  var FLIGHTS_PAID = 10748;
+
+  var TIER = {
+    a: { name: "רמה א׳", total: 35750, ground: 25000,
+         cat: { lodging:5300, food:3500, intercity:1200, local:500, experience:2500, shopping:8000, buffer:4000 } },
+    b: { name: "רמה ב׳", total: 40750, ground: 30000,
+         cat: { lodging:6500, food:4600, intercity:1700, local:600, experience:3500, shopping:10000, buffer:3100 } }
+  };
+
+  var CATS = {
+    lodging:    { he: "לינה",             ic: "🏨" },
+    food:       { he: "אוכל",             ic: "🍜" },
+    intercity:  { he: "רכבות בין ערים",   ic: "🚄" },
+    local:      { he: "תחבורה מקומית",    ic: "🚇" },
+    experience: { he: "חוויות",           ic: "🎢" },
+    shopping:   { he: "קניות",            ic: "🛍️" },
+    buffer:     { he: "לוגיסטיקה ורזרבה", ic: "🧾" },
+    flight:     { he: "טיסות",            ic: "✈️" }
+  };
+
+  var STATES = { idea: "רעיון", chosen: "נבחר", booked: "הוזמן ושולם" };
+
+  /* ============ GEOGRAPHY ============ */
+  var HONSHU = [[41.45,140.35],[41.25,141.15],[40.5,141.5],[39.6,142.05],[38.9,141.6],[38.3,141.1],[37.8,141.0],[37.0,140.98],[36.35,140.65],[35.75,140.85],[35.7,140.45],[35.35,140.4],[35.15,139.85],[35.45,139.75],[35.6,139.9],[35.53,139.65],[35.3,139.65],[35.15,139.6],[34.9,139.85],[34.6,138.85],[35.0,138.75],[34.75,138.25],[34.6,137.5],[34.65,136.85],[34.3,136.9],[33.85,136.15],[33.45,135.75],[33.9,135.1],[34.35,135.15],[34.6,135.4],[34.4,135.0],[34.35,134.0],[34.45,133.3],[34.35,132.3],[34.05,131.2],[33.95,130.9],[34.4,130.9],[34.75,131.4],[35.4,132.7],[35.55,133.5],[35.6,134.6],[35.75,135.35],[35.5,135.9],[35.8,136.15],[36.25,136.15],[36.9,136.75],[37.35,136.9],[37.5,137.35],[37.15,137.15],[37.35,138.3],[37.95,139.05],[38.4,139.45],[38.85,139.7],[39.5,139.9],[40.15,139.9],[40.6,140.05],[41.15,140.35],[41.45,140.35]];
+  var HOKKAIDO = [[41.45,140.15],[41.85,140.15],[42.3,139.85],[43.1,140.35],[43.4,141.0],[43.9,141.55],[44.6,141.6],[45.35,141.65],[45.5,142.05],[44.95,142.6],[44.35,143.4],[44.05,144.3],[44.15,145.15],[43.7,145.2],[43.3,145.55],[42.95,144.9],[42.9,144.1],[42.5,143.35],[42.15,142.9],[41.95,142.4],[42.35,141.2],[42.65,140.5],[42.3,140.4],[41.75,140.55],[41.45,140.15]];
+  var KYUSHU = [[33.95,130.9],[33.65,130.45],[33.55,130.05],[33.25,129.6],[33.0,129.55],[32.75,129.75],[32.9,130.2],[32.55,130.15],[32.15,130.15],[31.6,130.1],[31.25,130.25],[31.3,130.65],[31.55,131.05],[32.05,131.5],[32.65,131.85],[33.25,131.75],[33.6,131.45],[33.95,130.9]];
+  var SHIKOKU = [[34.25,134.05],[34.05,134.6],[33.55,134.35],[33.25,133.75],[33.0,133.0],[33.3,132.45],[33.55,132.4],[33.95,132.75],[34.15,133.4],[34.25,134.05]];
+  var SADO = [[38.3,138.25],[38.05,138.25],[37.85,138.4],[38.0,138.55],[38.3,138.55],[38.3,138.25]];
+  var ISLANDS = [HONSHU, HOKKAIDO, KYUSHU, SHIKOKU, SADO];
+
+  var B = { latMin: 30.6, latMax: 46.0, lngMin: 128.4, lngMax: 146.3 };
+
+  function mY(lat) { return Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)); }
+  var MY0 = mY(B.latMax), MY1 = mY(B.latMin);
+  function projX(lng) { return (lng - B.lngMin) / (B.lngMax - B.lngMin); }
+  function projY(lat) { return (MY0 - mY(lat)) / (MY0 - MY1); }
+  function invLng(u) { return B.lngMin + u * (B.lngMax - B.lngMin); }
+  function invLat(v) { var m = MY0 - v * (MY0 - MY1); return (Math.atan(Math.exp(m)) - Math.PI / 4) * 360 / Math.PI; }
+
+  var VW = 1000;
+  var VH = Math.round(VW * ((MY0 - MY1) / ((B.lngMax - B.lngMin) * Math.PI / 180)));
+
+  /* ============ PLACES ============ */
+  var PLACES = [
+    { id:"tokyo", he:"טוקיו", en:"Tokyo", lat:35.68, lng:139.69, role:"base", lo:[13000,22000],
+      note:"בסיס ראשון טבעי. נוחתים בנאריטה, חיי עיר ופופ-קלצ׳ר, ומכאן יוצאים לטיולי יום." },
+    { id:"narita", he:"נאריטה", en:"NRT Airport", lat:35.77, lng:140.39, role:"airport",
+      note:"שדה הנחיתה וההמראה. הגעה: 29.10 בבוקר. יציאה: 17.11 בצהריים." },
+    { id:"hakone", he:"האקונה", en:"Hakone", lat:35.23, lng:139.02, role:"daytrip", lo:[25000,60000],
+      note:"אזור האונסן הקלאסי, שעה וחצי מטוקיו. אפשר טיול יום או לילה בריוקאן." },
+    { id:"nikko", he:"ניקו", en:"Nikko", lat:36.75, lng:139.60, role:"daytrip",
+      note:"מקדשים ביער הרים. השלכת מגיעה לכאן מוקדם יותר מטוקיו, מתאים לתחילת הטיול." },
+    { id:"kamikochi", he:"קמיקוצ׳י", en:"Kamikochi", lat:36.25, lng:137.63, role:"daytrip",
+      note:"עמק בלב האלפים היפניים. שימו לב: נסגר לעונה באמצע נובמבר, לבדוק תאריך מדויק." },
+    { id:"takayama", he:"טקאיאמה", en:"Takayama", lat:36.14, lng:137.25, role:"base", lo:[12000,20000],
+      note:"עיירה מסורתית בהרים, רחוב עתיק משומר. בסיס אמצע טוב בין טוקיו לקנסאי." },
+    { id:"kanazawa", he:"קנזאווה", en:"Kanazawa", lat:36.56, lng:136.66, role:"base", lo:[12000,18000],
+      note:"גן קנרוקואן, רובע גיישות, שוק דגים. פחות עמוסה מקיוטו ועם אווירה דומה." },
+    { id:"kyoto", he:"קיוטו", en:"Kyoto", lat:35.01, lng:135.77, role:"base", lo:[15000,25000],
+      note:"לב הטיול. שיא הקויו כאן הוא בדיוק בתאריכים שלנו, ולכן גם היפה וגם היקר. להזמין מוקדם." },
+    { id:"nara", he:"נארה", en:"Nara", lat:34.69, lng:135.80, role:"daytrip",
+      note:"טיול יום מקיוטו. פארק האיילים ומקדש טודאיג׳י." },
+    { id:"osaka", he:"אוסקה", en:"Osaka", lat:34.69, lng:135.50, role:"base", lo:[11000,18000],
+      note:"אוכל רחוב, חיי לילה, ו-USJ. לינה כאן זולה מקיוטו והנסיעה ביניהן 30 דקות." },
+    { id:"koyasan", he:"קויה-סאן", en:"Koyasan", lat:34.21, lng:135.58, role:"daytrip", lo:[20000,35000],
+      note:"הר מנזרים. אפשר לישון במקדש עם נזירים ולהשתתף בתפילת שחרית." },
+    { id:"kinosaki", he:"קינוסאקי אונסן", en:"Kinosaki", lat:35.62, lng:134.82, role:"daytrip", lo:[30000,55000],
+      note:"עיירת אונסן שכולה בתי מרחץ, מסתובבים בין שבעה מעיינות ביוקטה." },
+    { id:"nagoya", he:"נגויה", en:"Nagoya", lat:35.18, lng:136.91, role:"daytrip",
+      note:"השער לפארק ג׳יבלי. עצירה טבעית בין טוקיו לקיוטו." },
+    { id:"hiroshima", he:"הירושימה", en:"Hiroshima", lat:34.39, lng:132.46, role:"daytrip",
+      note:"פארק השלום ומיאג׳ימה. רחוקה, שווה רק אם מקדישים לה לילה." },
+    { id:"fukuoka", he:"פוקואוקה", en:"Fukuoka", lat:33.59, lng:130.40, role:"poi",
+      note:"כאן מתקיים טורניר הסומו בתאריכים שלנו. רחוק מאוד מהמסלול, כנראה לא ריאלי." }
+  ];
+  var PBY = {}; PLACES.forEach(function (p) { PBY[p.id] = p; });
+
+  var SEED = [
+    { id:"sd1", pid:"tokyo",  cat:"lodging",    name:"מלון בטוקיו",              nights:5, est:4000, state:"idea" },
+    { id:"sd2", pid:"kyoto",  cat:"lodging",    name:"מלון בקיוטו",              nights:5, est:5000, state:"idea" },
+    { id:"sd3", pid:"tokyo",  cat:"experience", name:"teamLab (לשניים)",         est:160,  state:"idea" },
+    { id:"sd4", pid:"nagoya", cat:"experience", name:"פארק ג׳יבלי (לשניים)",     est:200,  state:"idea" },
+    { id:"sd5", pid:"osaka",  cat:"experience", name:"USJ (לשניים)",             est:345,  state:"idea" },
+    { id:"sd6", pid:"tokyo",  cat:"experience", name:"סיור אורוות סומו (לשניים)", est:480, state:"idea" },
+    { id:"sd7", pid:"kyoto",  cat:"intercity",  name:"שינקנסן טוקיו-קיוטו (לשניים)", est:560, state:"idea" },
+    { id:"sd8", pid:"hakone", cat:"lodging",    name:"לילה בריוקאן עם אונסן",    nights:1, est:900,  state:"idea" }
+  ];
+
+  /* ============ SYNC CONFIG ============ */
+  var REPO_OWNER = "element-m-a-m";
+  var REPO_NAME  = "japan-trip-map";
+  var DATA_FILE  = "data.json";
+  var TOKEN_KEY  = "japan-map-gh-token";
+
+  /* ============ STATE ============ */
+  var KEY = "japan-map-planner-v1";
+  var BASELINE_STAMP = "24.07.2026";   // הגרסה המסונכרנת שהוטמעה בדף הזה
+  var S = { items: [], custom: [], order: {}, sel: null, tab: "coach", savedAt: null,
+            view: { tilt: 1, zoom: 1, x: 0, y: 0 } };
+
+  function load() {
+    try {
+      var raw = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (raw && raw.items) {
+        S.items = raw.items; S.custom = raw.custom || []; S.order = raw.order || {};
+        S.savedAt = raw.savedAt || null;
+        if (raw.view) S.view = raw.view;
+        return;
+      }
+    } catch (e) {}
+    resetToBaseline();
+  }
+  function resetToBaseline() {
+    S.items = SEED.map(function (x) { return Object.assign({}, x); });
+    S.custom = []; S.order = {}; S.sel = null; S.savedAt = null;
+  }
+  function save() {
+    S.savedAt = new Date().toISOString();
+    try {
+      localStorage.setItem(KEY, JSON.stringify({
+        items: S.items, custom: S.custom, order: S.order, view: S.view, savedAt: S.savedAt
+      }));
+    } catch (e) {}
+  }
+  function snapshot() {
+    return {
+      app: "japan-map-planner", v: 1,
+      baseline: BASELINE_STAMP,
+      exportedAt: new Date().toISOString(),
+      items: S.items, custom: S.custom, order: S.order
+    };
+  }
+  function applySnapshot(d) {
+    if (!d || !Array.isArray(d.items)) return false;
+    S.items = d.items;
+    S.custom = Array.isArray(d.custom) ? d.custom : [];
+    S.order = (d.order && typeof d.order === "object") ? d.order : {};
+    S.remoteStamp = d.exportedAt || null;
+    S.sel = null;
+    return true;
+  }
+
+  /* ---- GitHub sync ---- */
+  function ghToken() { try { return localStorage.getItem(TOKEN_KEY) || ""; } catch (e) { return ""; } }
+  function setGhToken(t) { try { localStorage.setItem(TOKEN_KEY, t); } catch (e) {} }
+  function b64(str) {
+    var bytes = new TextEncoder().encode(str), bin = "";
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+  var API = "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/contents/" + DATA_FILE;
+
+  function pullRemote() {
+    return fetch(DATA_FILE + "?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })
+      .then(function (d) { return applySnapshot(d) ? d : null; });
+  }
+
+  function publishRemote(token) {
+    return fetch(API, { headers: { Authorization: "token " + token } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (ex) {
+        var body = {
+          message: "עדכון תכנון - " + new Date().toLocaleString("he-IL"),
+          content: b64(JSON.stringify(snapshot(), null, 2))
+        };
+        if (ex && ex.sha) body.sha = ex.sha;
+        return fetch(API, {
+          method: "PUT",
+          headers: { Authorization: "token " + token, "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+      })
+      .then(function (r) {
+        if (r.ok) return r.json();
+        return r.json().then(function (e) { throw new Error(e.message || ("HTTP " + r.status)); },
+                             function () { throw new Error("HTTP " + r.status); });
+      });
+  }
+  function fmtTime(iso) {
+    if (!iso) return "טרם נשמר";
+    try {
+      var d = new Date(iso);
+      var p = function (n) { return (n < 10 ? "0" : "") + n; };
+      return p(d.getDate()) + "." + p(d.getMonth() + 1) + "." + d.getFullYear() + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+    } catch (e) { return "-"; }
+  }
+  function allPlaces() { return PLACES.concat(S.custom); }
+  function place(id) { if (PBY[id]) return PBY[id]; for (var i = 0; i < S.custom.length; i++) if (S.custom[i].id === id) return S.custom[i]; return null; }
+
+  /* ============ MONEY ============ */
+  function nis(n) { return "₪" + Math.round(n).toLocaleString("en-US"); }
+  function yen(n) { return "¥" + Math.round(n).toLocaleString("en-US"); }
+
+  function totals() {
+    var t = { paid: FLIGHTS_PAID, plan: 0, nights: 0, cat: {} };
+    Object.keys(CATS).forEach(function (c) { t.cat[c] = { paid: 0, plan: 0 }; });
+    t.cat.flight.paid = FLIGHTS_PAID;
+    S.items.forEach(function (it) {
+      var amt = it.state === "booked" ? (it.actual != null ? it.actual : it.est) : it.est;
+      amt = Number(amt) || 0;
+      if (it.state === "booked") { t.paid += amt; t.cat[it.cat].paid += amt; }
+      else if (it.state === "chosen") { t.plan += amt; t.cat[it.cat].plan += amt; }
+      if (it.cat === "lodging" && it.state !== "idea") t.nights += Number(it.nights) || 0;
+    });
+    t.committed = t.paid + t.plan;
+    return t;
+  }
+
+  /* ============ MAP RENDER ============ */
+  var svg = document.getElementById("mapsvg");
+  var plane = document.getElementById("plane");
+  var pinsEl = document.getElementById("pins");
+
+  function buildMap() {
+    svg.setAttribute("viewBox", "0 0 " + VW + " " + VH);
+    plane.style.aspectRatio = VW + " / " + VH;
+
+    var g = document.getElementById("g-grid"), s = "";
+    for (var la = 32; la <= 46; la += 2) {
+      var y = projY(la) * VH;
+      s += '<path class="gridline" d="M0 ' + y.toFixed(1) + ' H' + VW + '"/>';
+    }
+    for (var ln = 130; ln <= 146; ln += 2) {
+      var x = projX(ln) * VW;
+      s += '<path class="gridline" d="M' + x.toFixed(1) + ' 0 V' + VH + '"/>';
+    }
+    g.innerHTML = s;
+
+    var gl = document.getElementById("g-land"), ls = "";
+    ISLANDS.forEach(function (poly) {
+      var d = poly.map(function (pt, i) {
+        return (i ? "L" : "M") + (projX(pt[1]) * VW).toFixed(1) + " " + (projY(pt[0]) * VH).toFixed(1);
+      }).join(" ") + " Z";
+      ls += '<path class="land" d="' + d + '"/>';
+    });
+    gl.innerHTML = ls;
+  }
+
+  function routeOrder() {
+    var chosen = {};
+    S.items.forEach(function (it) { if (it.cat === "lodging" && it.state !== "idea") chosen[it.pid] = true; });
+    var ids = Object.keys(chosen);
+    ids.sort(function (a, b) {
+      var oa = S.order[a] != null ? S.order[a] : 99, ob = S.order[b] != null ? S.order[b] : 99;
+      if (oa !== ob) return oa - ob;
+      return a.localeCompare(b);
+    });
+    return ids;
+  }
+
+  function drawRoute() {
+    var ids = routeOrder(), gr = document.getElementById("g-routes");
+    if (ids.length < 2) { gr.innerHTML = ""; return; }
+    var d = ids.map(function (id, i) {
+      var p = place(id); if (!p) return "";
+      return (i ? "L" : "M") + (projX(p.lng) * VW).toFixed(1) + " " + (projY(p.lat) * VH).toFixed(1);
+    }).join(" ");
+    gr.innerHTML = '<path class="routeline solid" d="' + d + '"/><path class="routeline" d="' + d + '"/>';
+  }
+
+  function placeState(pid) {
+    var mine = S.items.filter(function (i) { return i.pid === pid; });
+    if (!mine.length) return "idea";
+    var booked = mine.some(function (i) { return i.state === "booked"; });
+    var chosen = mine.some(function (i) { return i.state === "chosen"; });
+    if (booked && !chosen) return "booked";
+    if (chosen || booked) return "chosen";
+    return "idea";
+  }
+
+  function drawPins() {
+    pinsEl.innerHTML = "";
+    allPlaces().forEach(function (p) {
+      var x = projX(p.lng) * 100, y = projY(p.lat) * 100;
+
+      var sh = document.createElement("div");
+      sh.className = "shadow-dot";
+      sh.style.left = x + "%"; sh.style.top = y + "%";
+      pinsEl.appendChild(sh);
+
+      var n = S.items.filter(function (i) { return i.pid === p.id && i.state !== "idea"; }).length;
+      var b = document.createElement("button");
+      b.className = "pin" + (S.sel === p.id ? " sel" : "");
+      b.style.left = x + "%"; b.style.top = y + "%";
+      b.setAttribute("data-state", placeState(p.id));
+      b.setAttribute("data-role", p.role || "base");
+      b.setAttribute("aria-label", p.he);
+      b.innerHTML =
+        '<span class="label">' + p.he + (n ? '<span class="badge-n">' + n + '</span>' : '') + '</span>' +
+        '<span class="head"></span><span class="stem"></span>';
+      b.addEventListener("click", function (e) { e.stopPropagation(); selectPlace(p.id); });
+      pinsEl.appendChild(b);
+    });
+  }
+
+  /* ============ VIEW CONTROLS ============ */
+  function applyView() {
+    var t = S.view.tilt ? 52 : 0;
+    plane.style.setProperty("--tilt", t + "deg");
+    plane.style.setProperty("--zoom", S.view.zoom);
+    plane.style.setProperty("--panx", S.view.x + "px");
+    plane.style.setProperty("--pany", S.view.y + "px");
+    document.getElementById("btn-tilt").classList.toggle("on", !!S.view.tilt);
+  }
+
+  document.getElementById("btn-tilt").addEventListener("click", function () { S.view.tilt = S.view.tilt ? 0 : 1; applyView(); save(); });
+  document.getElementById("btn-zin").addEventListener("click", function () { S.view.zoom = Math.min(3.2, S.view.zoom * 1.28); applyView(); save(); });
+  document.getElementById("btn-zout").addEventListener("click", function () { S.view.zoom = Math.max(0.55, S.view.zoom / 1.28); applyView(); save(); });
+  document.getElementById("btn-reset").addEventListener("click", function () { S.view = { tilt: 1, zoom: 1, x: 0, y: 0 }; applyView(); save(); });
+
+  var drag = null;
+  plane.addEventListener("pointerdown", function (e) {
+    if (addMode) return;
+    drag = { sx: e.clientX, sy: e.clientY, ox: S.view.x, oy: S.view.y };
+    plane.classList.add("dragging");
+    plane.setPointerCapture(e.pointerId);
+  });
+  plane.addEventListener("pointermove", function (e) {
+    if (!drag) return;
+    S.view.x = drag.ox + (e.clientX - drag.sx);
+    S.view.y = drag.oy + (e.clientY - drag.sy);
+    applyView();
+  });
+  plane.addEventListener("pointerup", function (e) {
+    if (!drag) return;
+    drag = null; plane.classList.remove("dragging"); save();
+    try { plane.releasePointerCapture(e.pointerId); } catch (err) {}
+  });
+
+  /* add custom place */
+  var addMode = false;
+  document.getElementById("btn-add").addEventListener("click", function () {
+    addMode = !addMode;
+    this.classList.toggle("on", addMode);
+    document.getElementById("addhint").hidden = !addMode;
+  });
+  svg.addEventListener("click", function (e) {
+    if (!addMode) return;
+    var r = svg.getBoundingClientRect();
+    var u = (e.clientX - r.left) / r.width, v = (e.clientY - r.top) / r.height;
+    var nm = prompt("שם המקום החדש:");
+    if (nm) {
+      var id = "c" + Date.now();
+      S.custom.push({ id: id, he: nm, en: "", lat: invLat(v), lng: invLng(u), role: "base", note: "מקום שהוספתם.", custom: true });
+      save(); drawPins(); selectPlace(id);
+    }
+    addMode = false;
+    document.getElementById("btn-add").classList.remove("on");
+    document.getElementById("addhint").hidden = true;
+  });
+
+  /* ============ TABS ============ */
+  var TABS = ["coach", "place", "route", "budget", "sync"];
+  function setTab(name) {
+    S.tab = name;
+    TABS.forEach(function (t) {
+      document.getElementById("tab-" + t).setAttribute("aria-selected", t === name ? "true" : "false");
+      document.getElementById("p-" + t).hidden = (t !== name);
+    });
+  }
+  TABS.forEach(function (t) { document.getElementById("tab-" + t).addEventListener("click", function () { setTab(t); render(); }); });
+
+  function selectPlace(id) { S.sel = id; setTab("place"); render(); }
+
+  /* ============ RENDER: COACH ============ */
+  function renderCoach() {
+    var t = totals(), el = document.getElementById("p-coach"), h = "";
+    var bases = routeOrder();
+    var hasTokyoLodge = S.items.some(function (i) { return i.pid === "tokyo" && i.cat === "lodging" && i.state !== "idea"; });
+    var kyotoBooked = S.items.some(function (i) { return i.pid === "kyoto" && i.cat === "lodging" && i.state === "booked"; });
+    var kyotoChosen = S.items.some(function (i) { return i.pid === "kyoto" && i.cat === "lodging" && i.state !== "idea"; });
+    var expChosen = S.items.filter(function (i) { return i.cat === "experience" && i.state !== "idea"; }).length;
+    var trainChosen = S.items.some(function (i) { return i.cat === "intercity" && i.state !== "idea"; });
+
+    h += '<div class="card"><h3>איפה אנחנו עומדים</h3>';
+    h += budgetBarHTML(t);
+    h += '</div>';
+
+    var steps = [];
+    steps.push({
+      done: bases.length >= 2, hot: bases.length < 2, n: 1,
+      t: "להחליט על הבסיסים",
+      d: bases.length >= 2
+        ? "נבחרו <b>" + bases.length + "</b> בסיסים. אפשר לשנות בכל רגע בלשונית המסלול."
+        : "זו ההחלטה הראשונה, כי היא קובעת גם את הלינה וגם את הרכבות. לחצו על עיר במפה והוסיפו לה לינה."
+    });
+    steps.push({
+      done: hasTokyoLodge, hot: bases.length >= 1 && !hasTokyoLodge, n: 2,
+      t: "טוקיו: המלון הראשון",
+      d: hasTokyoLodge
+        ? "יש לינה בטוקיו. אפשר לעבור לקיוטו."
+        : "מתחילים מטוקיו כי שם נוחתים. טווח מטרה: <b>¥13,000-18,000</b> ללילה לחדר זוגי במיקום מרכזי."
+    });
+    steps.push({
+      done: kyotoBooked, hot: kyotoChosen && !kyotoBooked, n: 3,
+      t: "קיוטו: להזמין מוקדם",
+      d: kyotoBooked
+        ? "קיוטו מוזמנת ומשולמת. זו הייתה ההזמנה הדחופה ביותר."
+        : "החדרים הטובים בקיוטו נחטפים לעונת השלכת. <b>יעד: לסגור עד ינואר.</b> טווח: <b>¥15,000-25,000</b> ללילה."
+    });
+    steps.push({
+      done: expChosen >= 2, hot: hasTokyoLodge && expChosen < 2, n: 4,
+      t: "חוויות שדורשות הזמנה מראש",
+      d: expChosen >= 2
+        ? "נבחרו <b>" + expChosen + "</b> חוויות."
+        : "ג׳יבלי דורש הזמנה מוקדמת ולעיתים הגרלה. שווה לבדוק מתי נפתחות ההזמנות לתאריכים שלנו."
+    });
+    steps.push({
+      done: trainChosen, hot: bases.length >= 2 && !trainChosen, n: 5,
+      t: "רכבות בין הבסיסים",
+      d: trainChosen
+        ? "יש כרטיסי רכבת בתכנון."
+        : "רק אחרי שהמסלול סגור. במסלול של שניים-שלושה בסיסים כרטיסים בודדים זולים מ-JR Pass."
+    });
+    steps.push({
+      done: t.nights >= TOTAL_NIGHTS, hot: t.nights > 0 && t.nights < TOTAL_NIGHTS, n: 6,
+      t: "לכסות את כל 19 הלילות",
+      d: t.nights >= TOTAL_NIGHTS
+        ? "כל הלילות מכוסים."
+        : "מכוסים <b>" + t.nights + "</b> מתוך <b>" + TOTAL_NIGHTS + "</b> לילות. נותרו <b>" + (TOTAL_NIGHTS - t.nights) + "</b>."
+    });
+
+    h += '<div class="card"><h3>סדר הפעולות המומלץ</h3>';
+    steps.forEach(function (s) {
+      h += '<div class="step' + (s.done ? " done" : (s.hot ? " hot" : "")) + '">' +
+           '<span class="ic">' + (s.done ? "✓" : s.n) + '</span>' +
+           '<span class="body"><span class="t">' + s.t + '</span><span class="d">' + s.d + '</span></span></div>';
+    });
+    h += '</div>';
+
+    h += '<div class="card"><h3>איך עובדים עם המפה</h3>' +
+         '<div class="step"><span class="ic">1</span><span class="body"><span class="d">' +
+         'לוחצים על עיר במפה, ונפתח לה כרטיס בלשונית <b>מקום</b>.</span></span></div>' +
+         '<div class="step"><span class="ic">2</span><span class="body"><span class="d">' +
+         'מוסיפים פריט (לינה, חוויה, רכבת) עם מחיר משוער. במצב <b>רעיון</b> הוא לא נספר בתקציב.</span></span></div>' +
+         '<div class="step"><span class="ic">3</span><span class="body"><span class="d">' +
+         'מצאתם מלון ברשת? מעדכנים ל<b>נבחר</b> עם המחיר האמיתי מההצעה, והוא נכנס לתקציב המתוכנן.</span></span></div>' +
+         '<div class="step"><span class="ic">4</span><span class="body"><span class="d">' +
+         'אחרי שמשלמים, מסמנים <b>הוזמן ושולם</b> ורושמים כמה שילמנו בפועל. הסכום עובר לעמודת ששולם.</span></span></div>' +
+         '</div>';
+
+    h += '<div class="foot">הנתונים נשמרים בדפדפן הזה בלבד.</div>';
+    el.innerHTML = h;
+  }
+
+  function budgetBarHTML(t) {
+    var scale = Math.max(TIER.b.total * 1.12, t.committed * 1.06);
+    var pPaid = (t.paid / scale) * 100, pPlan = (t.plan / scale) * 100;
+    var posA = (TIER.a.total / scale) * 100, posB = (TIER.b.total / scale) * 100;
+
+    var v, cls;
+    if (t.committed <= TIER.a.total) { cls = "ok"; v = "בתוך רמה א׳. נשארו " + nis(TIER.a.total - t.committed) + " עד התקרה שלה."; }
+    else if (t.committed <= TIER.b.total) { cls = "mid"; v = "בין רמה א׳ לרמה ב׳. נשארו " + nis(TIER.b.total - t.committed) + " עד רמה ב׳."; }
+    else { cls = "over"; v = "מעל רמה ב׳ ב-" + nis(t.committed - TIER.b.total) + ". שווה לבדוק מה אפשר לקצץ."; }
+
+    return '<div class="bbar">' +
+      '<span class="seg paid" style="width:' + pPaid.toFixed(2) + '%"></span>' +
+      '<span class="seg plan" style="width:' + pPlan.toFixed(2) + '%;right:' + pPaid.toFixed(2) + '%"></span>' +
+      '</div>' +
+      '<div class="tickrow">' +
+      '<span class="tick a" style="right:' + posA.toFixed(2) + '%">רמה א׳ ' + nis(TIER.a.total) + '</span>' +
+      '<span class="tick b" style="right:' + posB.toFixed(2) + '%">רמה ב׳ ' + nis(TIER.b.total) + '</span>' +
+      '</div>' +
+      '<div class="verdict ' + cls + '">' + v + '</div>';
+  }
+
+  /* ============ RENDER: PLACE ============ */
+  function renderPlace() {
+    var el = document.getElementById("p-place");
+    if (!S.sel) { el.innerHTML = '<div class="empty">לחצו על מקום במפה כדי לפתוח אותו.</div>'; return; }
+    var p = place(S.sel);
+    if (!p) { el.innerHTML = '<div class="empty">המקום לא נמצא.</div>'; return; }
+
+    var h = '<div class="place-head"><h2>' + p.he + '</h2>' +
+            (p.en ? '<span class="en">' + p.en + '</span>' : '') + '</div>';
+    if (p.note) h += '<p class="place-note">' + p.note + '</p>';
+    if (p.lo) h += '<div class="pricehint">טווח לינה מקובל כאן: ' + yen(p.lo[0]) + '-' + yen(p.lo[1]) + ' ללילה (' + nis(p.lo[0] / RATE) + '-' + nis(p.lo[1] / RATE) + ')</div>';
+
+    var mine = S.items.filter(function (i) { return i.pid === p.id; });
+    h += '<div class="card"><h3>פריטים במקום הזה</h3>';
+    if (!mine.length) h += '<div class="empty">אין עדיין. הוסיפו למטה.</div>';
+    mine.forEach(function (it) {
+      var amt = it.state === "booked" && it.actual != null ? it.actual : it.est;
+      h += '<div class="item" data-s="' + it.state + '">' +
+        '<div class="r1"><div><div class="nm">' + esc(it.name) + '</div>' +
+        '<div class="meta">' + CATS[it.cat].ic + " " + CATS[it.cat].he +
+        (it.nights ? " · " + it.nights + " לילות" : "") + '</div></div>' +
+        '<div class="amt">' + nis(amt || 0) + '</div></div>' +
+        '<div class="segbtns" data-item="' + it.id + '">' +
+          '<button data-v="idea" aria-pressed="' + (it.state === "idea") + '">רעיון</button>' +
+          '<button data-v="chosen" aria-pressed="' + (it.state === "chosen") + '">נבחר</button>' +
+          '<button data-v="booked" aria-pressed="' + (it.state === "booked") + '">שולם</button>' +
+        '</div>' +
+        '<div class="row">' +
+          '<label class="fld">' + (it.state === "booked" ? "שולם בפועל (₪)" : "הערכה (₪)") +
+          '<input class="in" type="number" min="0" step="10" data-edit="' + it.id + '" value="' + (amt || 0) + '"></label>' +
+          (it.cat === "lodging" ? '<label class="fld">לילות<input class="in" type="number" min="0" max="19" data-nights="' + it.id + '" value="' + (it.nights || 0) + '"></label>' : '') +
+          '<button class="btn ghost" data-del="' + it.id + '">מחיקה</button>' +
+        '</div>' +
+      '</div>';
+    });
+    h += '</div>';
+
+    h += '<div class="card"><h3>הוספת פריט</h3>' +
+      '<label class="fld">מה זה<input class="in" id="f-name" placeholder="למשל: מלון גראנד, ליד התחנה"></label>' +
+      '<div class="row">' +
+        '<label class="fld">קטגוריה<select class="in" id="f-cat">' +
+          Object.keys(CATS).filter(function (c) { return c !== "flight"; }).map(function (c) {
+            return '<option value="' + c + '"' + (c === "lodging" ? " selected" : "") + '>' + CATS[c].he + '</option>';
+          }).join("") + '</select></label>' +
+        '<label class="fld">מחיר (₪)<input class="in" type="number" id="f-est" min="0" step="10" value="0"></label>' +
+        '<label class="fld">לילות<input class="in" type="number" id="f-nights" min="0" max="19" value="0"></label>' +
+      '</div>' +
+      '<button class="btn primary" id="f-add">הוספה</button></div>';
+
+    if (p.custom) h += '<button class="btn ghost" id="del-place">מחיקת המקום הזה מהמפה</button>';
+
+    el.innerHTML = h;
+
+    el.querySelectorAll(".segbtns button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var id = b.parentNode.getAttribute("data-item"), v = b.getAttribute("data-v");
+        var it = S.items.filter(function (x) { return x.id === id; })[0];
+        if (!it) return;
+        if (v === "booked" && it.actual == null) it.actual = it.est;
+        it.state = v; save(); render();
+      });
+    });
+    el.querySelectorAll("[data-edit]").forEach(function (inp) {
+      inp.addEventListener("change", function () {
+        var it = S.items.filter(function (x) { return x.id === inp.getAttribute("data-edit"); })[0];
+        if (!it) return;
+        var v = Number(inp.value) || 0;
+        if (it.state === "booked") it.actual = v; else it.est = v;
+        save(); render();
+      });
+    });
+    el.querySelectorAll("[data-nights]").forEach(function (inp) {
+      inp.addEventListener("change", function () {
+        var it = S.items.filter(function (x) { return x.id === inp.getAttribute("data-nights"); })[0];
+        if (!it) return;
+        it.nights = Number(inp.value) || 0; save(); render();
+      });
+    });
+    el.querySelectorAll("[data-del]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var id = b.getAttribute("data-del");
+        S.items = S.items.filter(function (x) { return x.id !== id; });
+        save(); render();
+      });
+    });
+    var addb = document.getElementById("f-add");
+    if (addb) addb.addEventListener("click", function () {
+      var nm = document.getElementById("f-name").value.trim();
+      if (!nm) { document.getElementById("f-name").focus(); return; }
+      S.items.push({
+        id: "i" + Date.now(), pid: p.id,
+        cat: document.getElementById("f-cat").value,
+        name: nm,
+        est: Number(document.getElementById("f-est").value) || 0,
+        nights: Number(document.getElementById("f-nights").value) || 0,
+        state: "chosen"
+      });
+      save(); render();
+    });
+    var dp = document.getElementById("del-place");
+    if (dp) dp.addEventListener("click", function () {
+      S.custom = S.custom.filter(function (x) { return x.id !== p.id; });
+      S.items = S.items.filter(function (x) { return x.pid !== p.id; });
+      S.sel = null; save(); render();
+    });
+  }
+
+  /* ============ RENDER: ROUTE ============ */
+  function renderRoute() {
+    var el = document.getElementById("p-route"), ids = routeOrder(), t = totals();
+    var h = '<div class="card"><h3>כיסוי הלילות</h3>' +
+      '<div class="nights-line"><span>מכוסים</span><b>' + t.nights + " / " + TOTAL_NIGHTS + '</b></div>' +
+      '<div class="nightbar"><i class="' + (t.nights >= TOTAL_NIGHTS ? "full" : "") + '" style="width:' +
+      Math.min(100, (t.nights / TOTAL_NIGHTS) * 100).toFixed(1) + '%"></i></div>';
+    if (t.nights < TOTAL_NIGHTS) h += '<div class="nights-line"><span>נותרו לשבץ</span><b>' + (TOTAL_NIGHTS - t.nights) + ' לילות</b></div>';
+    h += '</div>';
+
+    h += '<div class="card"><h3>סדר הבסיסים</h3>';
+    if (!ids.length) {
+      h += '<div class="empty">עוד אין בסיסים. בסיס נוצר כשמוסיפים לינה למקום כלשהו.</div>';
+    } else {
+      ids.forEach(function (id, i) {
+        var p = place(id);
+        var n = S.items.filter(function (x) { return x.pid === id && x.cat === "lodging" && x.state !== "idea"; })
+                       .reduce(function (a, x) { return a + (Number(x.nights) || 0); }, 0);
+        h += '<div class="rt"><span class="ord">' + (i + 1) + '</span>' +
+             '<span class="nm">' + p.he + '</span>' +
+             '<span class="ni">' + n + ' לילות</span>' +
+             '<span class="mv"><button data-up="' + id + '" title="למעלה">▲</button>' +
+             '<button data-dn="' + id + '" title="למטה">▼</button></span></div>';
+      });
+      h += '<div class="foot" style="border:0;padding-top:2px">הקו הכתום במפה עובר לפי הסדר הזה.</div>';
+    }
+    h += '</div>';
+
+    h += '<div class="card"><h3>תזכורות למסלול</h3>' +
+      '<div class="step"><span class="ic">!</span><span class="body"><span class="d">' +
+      'קמיקוצ׳י נסגרת לעונה באמצע נובמבר. אם היא במסלול, לוודא תאריך סגירה.</span></span></div>' +
+      '<div class="step"><span class="ic">!</span><span class="body"><span class="d">' +
+      'שיא הקויו בקיוטו הוא בסוף נובמבר. אנחנו עוזבים ב-17.11, כלומר נתפוס את תחילת השיא.</span></span></div>' +
+      '<div class="step"><span class="ic">!</span><span class="body"><span class="d">' +
+      'טורניר הסומו בתאריכים שלנו נמצא בפוקואוקה, רחוק מאוד. החלופה: סיור אורוות בטוקיו.</span></span></div>' +
+      '</div>';
+
+    el.innerHTML = h;
+    el.querySelectorAll("[data-up],[data-dn]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var up = b.hasAttribute("data-up"), id = b.getAttribute(up ? "data-up" : "data-dn");
+        var list = routeOrder(), i = list.indexOf(id), j = up ? i - 1 : i + 1;
+        if (j < 0 || j >= list.length) return;
+        var tmp = list[i]; list[i] = list[j]; list[j] = tmp;
+        list.forEach(function (x, k) { S.order[x] = k; });
+        save(); render();
+      });
+    });
+  }
+
+  /* ============ RENDER: BUDGET ============ */
+  function renderBudget() {
+    var t = totals(), el = document.getElementById("p-budget");
+    var h = '<div class="card"><h3>מצב כללי</h3>' + budgetBarHTML(t) +
+      '<div class="nights-line"><span>שולם עד כה</span><b>' + nis(t.paid) + '</b></div>' +
+      '<div class="nights-line"><span>מתוכנן ועוד לא שולם</span><b>' + nis(t.plan) + '</b></div>' +
+      '<div class="nights-line"><span>סך הכל מחויב</span><b>' + nis(t.committed) + '</b></div>' +
+      '</div>';
+
+    h += '<div class="card"><h3>לפי קטגוריה, מול שתי הרמות</h3>';
+    Object.keys(CATS).forEach(function (c) {
+      var used = t.cat[c].paid + t.cat[c].plan;
+      var ba = c === "flight" ? FLIGHTS_PAID : TIER.a.cat[c];
+      var bb = c === "flight" ? FLIGHTS_PAID : TIER.b.cat[c];
+      var over = used > bb;
+      var wp = bb ? Math.min(100, (t.cat[c].paid / bb) * 100) : 0;
+      var wc = bb ? Math.min(100 - wp, (t.cat[c].plan / bb) * 100) : 0;
+      h += '<div class="catrow' + (over ? " over" : "") + '">' +
+        '<div class="top"><span>' + CATS[c].ic + " " + CATS[c].he + '</span>' +
+        '<span class="nums">' + nis(used) + " / " + nis(ba) + " · " + nis(bb) + '</span></div>' +
+        '<div class="meter"><i class="p" style="width:' + wp.toFixed(1) + '%"></i>' +
+        '<i class="c" style="width:' + wc.toFixed(1) + '%"></i></div></div>';
+    });
+    h += '<div class="foot" style="border:0">המספרים: בשימוש / תקרת רמה א׳ · תקרת רמה ב׳</div></div>';
+
+    h += '<div class="card"><h3>המרה מהירה</h3>' +
+      '<div class="row"><label class="fld">ין<input class="in" type="number" id="cv-y" value="15000" step="500"></label>' +
+      '<label class="fld">שקל<input class="in" type="number" id="cv-n" value="300" step="10"></label></div>' +
+      '<div class="foot" style="border:0">שער תכנון: ¥50 = ₪1</div></div>';
+
+    h += '<button class="btn ghost" id="reset-all">איפוס כל הנתונים</button>';
+    el.innerHTML = h;
+
+    var cy = document.getElementById("cv-y"), cn = document.getElementById("cv-n");
+    cy.addEventListener("input", function () { cn.value = Math.round((Number(cy.value) || 0) / RATE); });
+    cn.addEventListener("input", function () { cy.value = Math.round((Number(cn.value) || 0) * RATE); });
+    document.getElementById("reset-all").addEventListener("click", function () {
+      if (!confirm("לאפס הכל ולחזור להצעות ההתחלתיות?")) return;
+      resetToBaseline(); save(); render();
+    });
+  }
+
+  /* ============ RENDER: SYNC ============ */
+  function renderSync() {
+    var el = document.getElementById("p-sync");
+    var canSave = !!(window.claude && window.claude.downloads);
+    var n = S.items.filter(function (i) { return i.state !== "idea"; }).length;
+
+    var online = location.protocol === "http:" || location.protocol === "https:";
+    var hasTok = !!ghToken();
+
+    var h = '<div class="card"><h3>מצב הזיכרון</h3>' +
+      '<div class="nights-line"><span>נשמר במכשיר הזה</span><b>' + fmtTime(S.savedAt) + '</b></div>' +
+      '<div class="nights-line"><span>הגרסה המשותפת בענן</span><b>' + (S.remoteStamp ? fmtTime(S.remoteStamp) : "לא נטענה") + '</b></div>' +
+      '<div class="nights-line"><span>פריטים פעילים</span><b>' + n + '</b></div>' +
+      '</div>';
+
+    if (online) {
+      h += '<div class="card"><h3>סנכרון משותף</h3>' +
+        '<div class="step"><span class="ic">↑</span><span class="body"><span class="t">פרסום</span>' +
+        '<span class="d">כותב את התכנון שלכם לענן. מרגע זה מון תראה אותו כשהיא תפתח או תמשוך.</span></span></div>' +
+        '<button class="btn primary" id="sy-pub">פרסום התכנון לענן</button>' +
+        '<div class="step"><span class="ic">↓</span><span class="body"><span class="t">משיכה</span>' +
+        '<span class="d">טוען את הגרסה המשותפת ומחליף את מה שיש כאן.</span></span></div>' +
+        '<button class="btn" id="sy-pull">משיכה מהענן</button>' +
+        '<div id="sy-msg"></div>' +
+        '<div class="foot" style="border:0;text-align:right">' +
+        (hasTok ? 'מפתח הגישה שמור בדפדפן הזה. ' : 'בפרסום הראשון תתבקשו להזין מפתח גישה. ') +
+        'המפתח נשמר רק אצלכם בדפדפן ולא נכתב לענן.' +
+        (hasTok ? ' <a href="#" id="sy-cleartok">מחיקת המפתח</a>' : '') +
+        '</div></div>';
+    } else {
+      h += '<div class="card"><h3>סנכרון משותף</h3>' +
+        '<div class="verdict mid">הסנכרון עובד בגרסה שמתארחת ב-GitHub Pages. בתצוגה הזו אפשר לייצא קובץ.</div>' +
+        '<div id="sy-msg"></div></div>';
+    }
+
+    h += '<div class="card"><h3>גיבוי מקומי</h3>' +
+      (canSave
+        ? '<button class="btn" id="sy-exp">ייצוא קובץ תכנון</button>'
+        : '<div class="foot" style="border:0">שמירת קבצים לא זמינה בתצוגה הזו.</div>') +
+      '<label class="btn" style="text-align:center;display:block">ייבוא קובץ' +
+      '<input type="file" id="sy-imp" accept=".json,application/json" style="display:none"></label>' +
+      '<button class="btn ghost" id="sy-copy">העתקה ללוח</button></div>';
+
+    h += '<button class="btn ghost" id="sy-reset">חזרה להצעות ההתחלתיות</button>';
+    el.innerHTML = h;
+
+    var pubb = document.getElementById("sy-pub");
+    if (pubb) pubb.addEventListener("click", function () {
+      var tok = ghToken();
+      if (!tok) {
+        tok = prompt("הדביקו כאן מפתח גישה של GitHub עם הרשאת repo.\nיוצרים אותו ב: github.com/settings/tokens\nהמפתח נשמר רק בדפדפן הזה.");
+        if (!tok) return;
+        tok = tok.trim(); setGhToken(tok);
+      }
+      pubb.disabled = true; say("מפרסם...", "mid");
+      publishRemote(tok)
+        .then(function () { S.remoteStamp = new Date().toISOString(); save(); say("פורסם. התכנון עכשיו משותף."); renderSync(); })
+        .catch(function (err) {
+          var m = String(err && err.message || err);
+          if (/Bad credentials|401/i.test(m)) { say("המפתח לא תקין. נסו שוב עם מפתח חדש.", "over"); setGhToken(""); }
+          else if (/404|Not Found/i.test(m)) say("הריפו לא נמצא, או שלמפתח אין הרשאת repo.", "over");
+          else if (/409|sha/i.test(m)) say("מישהו פרסם לפניכם. משכו קודם ואז פרסמו שוב.", "over");
+          else say("הפרסום נכשל: " + m, "over");
+        })
+        .then(function () { if (pubb) pubb.disabled = false; });
+    });
+
+    var pullb = document.getElementById("sy-pull");
+    if (pullb) pullb.addEventListener("click", function () {
+      if (!confirm("למשוך את הגרסה המשותפת? מה שלא פורסם כאן יידרס.")) return;
+      pullb.disabled = true; say("מושך...", "mid");
+      pullRemote()
+        .then(function (d) { if (d) { save(); render(); } else say("אין עדיין גרסה משותפת בענן.", "mid"); })
+        .catch(function () { say("המשיכה נכשלה.", "over"); })
+        .then(function () { if (pullb) pullb.disabled = false; });
+    });
+
+    var ct = document.getElementById("sy-cleartok");
+    if (ct) ct.addEventListener("click", function (e) { e.preventDefault(); setGhToken(""); renderSync(); });
+
+    var msg = document.getElementById("sy-msg");
+    function say(txt, cls) { msg.innerHTML = '<div class="verdict ' + (cls || "ok") + '">' + txt + '</div>'; }
+
+    var expb = document.getElementById("sy-exp");
+    if (expb) expb.addEventListener("click", function () {
+      var d = new Date();
+      var p = function (x) { return (x < 10 ? "0" : "") + x; };
+      var fn = "japan-plan-" + d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + ".json";
+      expb.disabled = true;
+      window.claude.downloads.save({ filename: fn, data: JSON.stringify(snapshot(), null, 2) })
+        .then(function () { say("הקובץ נשמר. אפשר לשלוח אותו הלאה."); })
+        .catch(function (err) {
+          var c = err && err.code;
+          if (c === "declined") say("הביטול נקלט, לא נשמר כלום.", "mid");
+          else if (c === "rate_limited") say("יש כבר בקשת שמירה פתוחה. נסו שוב בעוד רגע.", "mid");
+          else if (c === "too_large") say("התכנון גדול מדי לשמירה. אפשר להשתמש בהעתקה ללוח.", "over");
+          else say("שמירה לא זמינה כרגע. השתמשו בהעתקה ללוח.", "over");
+        })
+        .then(function () { expb.disabled = false; });
+    });
+
+    document.getElementById("sy-copy").addEventListener("click", function () {
+      var txt = JSON.stringify(snapshot());
+      function ok() { say("הנתונים הועתקו. אפשר להדביק אותם בהודעה."); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(ok).catch(function () { say("ההעתקה נכשלה.", "over"); });
+      } else { say("ההעתקה לא נתמכת בדפדפן הזה.", "over"); }
+    });
+
+    document.getElementById("sy-imp").addEventListener("change", function (e) {
+      var f = e.target.files && e.target.files[0];
+      if (!f) return;
+      var r = new FileReader();
+      r.onload = function () {
+        try {
+          var d = JSON.parse(r.result);
+          if (!d || !Array.isArray(d.items)) throw new Error("bad");
+          S.items = d.items; S.custom = Array.isArray(d.custom) ? d.custom : [];
+          S.order = d.order && typeof d.order === "object" ? d.order : {};
+          S.sel = null; save(); render();
+        } catch (err) { say("הקובץ לא תקין. צריך קובץ שיוצא מהמפה הזו.", "over"); }
+      };
+      r.onerror = function () { say("קריאת הקובץ נכשלה.", "over"); };
+      r.readAsText(f);
+    });
+
+    document.getElementById("sy-reset").addEventListener("click", function () {
+      if (!confirm("לחזור לגרסה המשותפת? כל שינוי מקומי שלא יוצא יימחק.")) return;
+      resetToBaseline(); save(); render();
+    });
+  }
+
+  /* ============ RENDER ============ */
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]; }); }
+
+  function render() {
+    var t = totals();
+    document.getElementById("s-paid").textContent = nis(t.paid);
+    document.getElementById("s-plan").textContent = nis(t.plan);
+    var left = TIER.b.total - t.committed;
+    document.getElementById("s-left").textContent = (left < 0 ? "-" : "") + nis(Math.abs(left));
+    document.getElementById("s-nights").textContent = t.nights + "/" + TOTAL_NIGHTS;
+
+    drawPins(); drawRoute();
+    if (S.tab === "coach") renderCoach();
+    if (S.tab === "place") renderPlace();
+    if (S.tab === "route") renderRoute();
+    if (S.tab === "budget") renderBudget();
+    if (S.tab === "sync") renderSync();
+  }
+
+  var hadLocal = false;
+  try { hadLocal = !!localStorage.getItem(KEY); } catch (e) {}
+
+  load();
+  buildMap();
+  applyView();
+  setTab("coach");
+  render();
+
+  // First visit on the hosted version: adopt the shared plan from the cloud.
+  if (!hadLocal && (location.protocol === "http:" || location.protocol === "https:")) {
+    pullRemote().then(function (d) { if (d) { save(); render(); } }).catch(function () {});
+  }
+})();
+</script>
