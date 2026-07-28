@@ -187,31 +187,33 @@
   .pin:focus-visible .head { outline: 2px solid var(--text); outline-offset: 2px; }
 
   .pin .label {
+    position: relative;
     font-size: 11px; font-weight: 700; white-space: nowrap;
     padding: 2px 7px; border-radius: 3px;
     background: var(--surface); color: var(--text);
     border: 1px solid var(--border-2);
     box-shadow: var(--shadow-s);
-    margin-bottom: 3px;
+    margin-bottom: calc(3px + var(--lift, 0px));
     transition: opacity .15s;
   }
-  /* declutter: secondary places reveal their label on demand */
-  .pin[data-role="daytrip"] .label,
-  .pin[data-role="poi"] .label,
-  .pin[data-role="airport"] .label { opacity: 0; }
+  /* leader line back down to the pin when a label was lifted clear of a neighbour */
+  .pin .label::after {
+    content: ""; position: absolute; top: 100%; right: 50%;
+    width: 1px; height: var(--lift, 0px);
+    background: var(--border-2);
+  }
   .pin[data-role="base"] { z-index: 3; }
-  .pin:hover .label,
-  .pin.sel .label,
-  .pin:focus-visible .label,
-  .pin[data-state="chosen"] .label,
-  .pin[data-state="booked"] .label { opacity: 1; }
+  .pin.sel, .pin:hover, .pin:focus-within { z-index: 8; }
   .pin .head {
+    position: relative;
     width: 15px; height: 15px; border-radius: 50%;
     border: 2.5px solid var(--surface);
     background: var(--faint);
     box-shadow: var(--shadow-m);
     transition: transform .15s, background .2s;
   }
+  /* generous invisible hit area so the pin is easy to grab */
+  .pin .head::before { content: ""; position: absolute; inset: -12px; border-radius: 50%; }
   .pin .stem { width: 2px; height: 16px; background: linear-gradient(to bottom, var(--border-2), transparent); }
 
   .pin[data-role="airport"] .head { border-radius: 2px; transform: rotate(45deg); }
@@ -322,19 +324,69 @@
 
   /* coach steps */
   .step {
-    display: flex; gap: 10px; padding: 11px 12px; border-radius: 4px;
+    display: flex; gap: 11px; padding: 11px 12px; border-radius: 4px;
     border: 1px solid var(--border); background: var(--surface);
-    align-items: flex-start;
+    align-items: flex-start; width: 100%; text-align: right;
+    font-family: inherit; cursor: default;
+    transition: opacity .18s, border-color .18s, background .18s;
   }
-  .step.hot { border-color: color-mix(in srgb, var(--momiji) 50%, transparent); background: color-mix(in srgb, var(--momiji) 7%, transparent); }
-  .step.done { opacity: .55; }
-  .step .ic { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; background: var(--surface-3); color: var(--muted); margin-top: 1px; }
-  .step.hot .ic { background: var(--momiji); color: #fff; }
-  .step.done .ic { background: var(--jade); color: #fff; }
-  .step .body { display: flex; flex-direction: column; gap: 3px; }
-  .step .t { font-size: 14px; font-weight: 700; }
+  button.step { cursor: pointer; }
+  button.step:hover { border-color: var(--border-2); background: var(--surface-3); }
+  button.step:focus-visible { outline: 2px solid var(--indigo); outline-offset: 1px; }
+
+  .step .ic {
+    flex: none; width: 26px; height: 26px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    background: var(--surface-3); color: var(--muted); margin-top: 1px;
+  }
+  .step .body { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+  .step .t { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
   .step .d { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
   .step .d b { color: var(--text); }
+
+  .now-chip {
+    font-size: 10px; letter-spacing: .06em; font-weight: 700;
+    background: var(--momiji); color: #fff;
+    padding: 1px 7px; border-radius: 8px;
+  }
+
+  /* three states: done, current, upcoming */
+  .step.done { opacity: .5; }
+  .step.done .ic { background: var(--jade); color: #fff; }
+  .step.done .t { text-decoration: line-through; text-decoration-color: var(--border-2); }
+
+  .step.current {
+    opacity: 1;
+    border-color: var(--momiji);
+    background: color-mix(in srgb, var(--momiji) 8%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--momiji) 35%, transparent);
+  }
+  .step.current .ic { background: var(--momiji); color: #fff; }
+
+  .step.future { opacity: .62; }
+  .step.future:hover { opacity: .9; }
+
+  /* price pair: shekel leads, yen supports */
+  .pri { font-family: var(--mono); font-weight: 700; direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+  .sec { font-family: var(--mono); font-size: .82em; color: var(--faint); direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; font-weight: 400; }
+
+  /* toast */
+  .toast {
+    position: fixed; inset-block-end: 18px; inset-inline-start: 50%;
+    transform: translateX(50%) translateY(14px);
+    background: var(--text); color: var(--bg);
+    padding: 9px 16px; border-radius: 5px; font-size: 13.5px; font-weight: 700;
+    box-shadow: var(--shadow-l); z-index: 200;
+    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .toast.on { opacity: 1; transform: translateX(50%) translateY(0); pointer-events: auto; }
+  .toast button {
+    background: none; border: 0; color: var(--ginkgo);
+    font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; padding: 0;
+    text-decoration: underline;
+  }
 
   /* place detail */
   .place-head { display: flex; flex-direction: column; gap: 4px; }
@@ -468,7 +520,10 @@
         <div><span class="sw" style="background:var(--faint)"></span> רעיון</div>
         <div><span class="sw" style="background:var(--momiji)"></span> נבחר</div>
         <div><span class="sw" style="background:var(--jade)"></span> הוזמן ושולם</div>
+        <div style="opacity:.75;padding-top:2px">לחיצה כפולה בוחרת בסיס</div>
       </div>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
     </div>
 
     <aside class="panel">
@@ -688,8 +743,33 @@
   function place(id) { if (PBY[id]) return PBY[id]; for (var i = 0; i < S.custom.length; i++) if (S.custom[i].id === id) return S.custom[i]; return null; }
 
   /* ============ MONEY ============ */
+  /* Shekel always leads; yen is shown as support, never on its own. */
   function nis(n) { return "₪" + Math.round(n).toLocaleString("en-US"); }
   function yen(n) { return "¥" + Math.round(n).toLocaleString("en-US"); }
+  function priceHTML(nisVal) {
+    return '<span class="pri">' + nis(nisVal) + '</span> <span class="sec">' + yen(nisVal * RATE) + '</span>';
+  }
+  /* takes a yen range (how Japanese rates are quoted) and leads with shekels */
+  function rangeHTML(yLow, yHigh) {
+    return '<span class="pri">' + nis(yLow / RATE) + "-" + nis(yHigh / RATE) + '</span> ' +
+           '<span class="sec">(' + yen(yLow) + "-" + yen(yHigh) + ')</span>';
+  }
+
+  /* ============ TOAST ============ */
+  var toastEl = document.getElementById("toast"), toastT = null;
+  function toast(msg, undoFn) {
+    toastEl.innerHTML = "<span>" + msg + "</span>";
+    if (undoFn) {
+      var b = document.createElement("button");
+      b.textContent = "ביטול";
+      b.addEventListener("click", function () { undoFn(); hideToast(); });
+      toastEl.appendChild(b);
+    }
+    toastEl.classList.add("on");
+    clearTimeout(toastT);
+    toastT = setTimeout(hideToast, undoFn ? 6000 : 2600);
+  }
+  function hideToast() { toastEl.classList.remove("on"); }
 
   function totals() {
     var t = { paid: FLIGHTS_PAID, plan: 0, nights: 0, cat: {} };
@@ -784,16 +864,82 @@
       b.style.left = x + "%"; b.style.top = y + "%";
       b.setAttribute("data-state", placeState(p.id));
       b.setAttribute("data-role", p.role || "base");
-      b.setAttribute("aria-label", p.he);
+      b.setAttribute("data-pid", p.id);
+      b.setAttribute("aria-label", p.he + " - לחיצה לפתיחה, לחיצה כפולה לבחירה כבסיס");
+      b.setAttribute("title", p.he);
       b.innerHTML =
-        '<span class="label">' + p.he + (n ? '<span class="badge-n">' + n + '</span>' : '') + '</span>' +
+        '<span class="label">' + esc(p.he) + (n ? '<span class="badge-n">' + n + '</span>' : '') + '</span>' +
         '<span class="head"></span><span class="stem"></span>';
       b.addEventListener("click", function (e) { e.stopPropagation(); selectPlace(p.id); });
+      b.addEventListener("dblclick", function (e) { e.preventDefault(); e.stopPropagation(); quickPick(p.id); });
       pinsEl.appendChild(b);
+    });
+    resolveLabels();
+  }
+
+  /* Nudge overlapping labels straight up (a leader line keeps them tied to their pin),
+     so nothing is ever hidden behind a neighbour. */
+  function resolveLabels() {
+    var pins = [].slice.call(pinsEl.querySelectorAll(".pin"));
+    pins.forEach(function (p) { p.style.setProperty("--lift", "0px"); });
+
+    var entries = pins.map(function (p) {
+      var lb = p.querySelector(".label");
+      return { pin: p, lb: lb, top: lb.getBoundingClientRect().top };
+    }).sort(function (a, b) { return a.top - b.top; });
+
+    var placed = [];
+    function hits(r) {
+      for (var i = 0; i < placed.length; i++) {
+        var q = placed[i];
+        if (!(r.right < q.left - 3 || r.left > q.right + 3 ||
+              r.bottom < q.top - 2 || r.top > q.bottom + 2)) return true;
+      }
+      return false;
+    }
+    entries.forEach(function (e) {
+      var lift = 0, guard = 0;
+      var r = e.lb.getBoundingClientRect();
+      while (hits(r) && guard < 14) {
+        lift += 15;
+        e.pin.style.setProperty("--lift", lift + "px");
+        r = e.lb.getBoundingClientRect();
+        guard++;
+      }
+      placed.push({ left: r.left, right: r.right, top: r.top, bottom: r.bottom });
+    });
+  }
+
+  /* double-click = adopt this place as a base, with one-tap undo */
+  function quickPick(pid) {
+    var p = place(pid); if (!p) return;
+    var lodge = S.items.filter(function (i) { return i.pid === pid && i.cat === "lodging"; })[0];
+
+    if (lodge) {
+      var was = lodge.state;
+      lodge.state = (lodge.state === "idea") ? "chosen" : "idea";
+      save(); render();
+      toast(lodge.state === "chosen" ? p.he + " נבחרה כבסיס" : p.he + " חזרה להיות רעיון",
+            function () { lodge.state = was; save(); render(); });
+      return;
+    }
+
+    var nights = (p.role === "base") ? 4 : 1;
+    var mid = p.lo ? (p.lo[0] + p.lo[1]) / 2 / RATE : 300;
+    var item = {
+      id: "i" + Date.now(), pid: pid, cat: "lodging",
+      name: "לינה ב" + p.he, nights: nights,
+      est: Math.round(mid * nights), state: "chosen"
+    };
+    S.items.push(item); save(); render();
+    toast(p.he + " נבחרה כבסיס, " + nights + " לילות", function () {
+      S.items = S.items.filter(function (x) { return x.id !== item.id; });
+      save(); render();
     });
   }
 
   /* ============ VIEW CONTROLS ============ */
+  var relayoutT = null;
   function applyView() {
     var t = S.view.tilt ? 52 : 0;
     plane.style.setProperty("--tilt", t + "deg");
@@ -801,7 +947,14 @@
     plane.style.setProperty("--panx", S.view.x + "px");
     plane.style.setProperty("--pany", S.view.y + "px");
     document.getElementById("btn-tilt").classList.toggle("on", !!S.view.tilt);
+    // spacing between pins changes with zoom/tilt, so re-space the labels once it settles
+    clearTimeout(relayoutT);
+    relayoutT = setTimeout(resolveLabels, 520);
   }
+  window.addEventListener("resize", function () {
+    clearTimeout(relayoutT);
+    relayoutT = setTimeout(resolveLabels, 220);
+  });
 
   document.getElementById("btn-tilt").addEventListener("click", function () { S.view.tilt = S.view.tilt ? 0 : 1; applyView(); save(); });
   document.getElementById("btn-zin").addEventListener("click", function () { S.view.zoom = Math.min(3.2, S.view.zoom * 1.28); applyView(); save(); });
@@ -838,15 +991,22 @@
     if (!addMode) return;
     var r = svg.getBoundingClientRect();
     var u = (e.clientX - r.left) / r.width, v = (e.clientY - r.top) / r.height;
-    var nm = prompt("שם המקום החדש:");
-    if (nm) {
-      var id = "c" + Date.now();
-      S.custom.push({ id: id, he: nm, en: "", lat: invLat(v), lng: invLng(u), role: "base", note: "מקום שהוספתם.", custom: true });
-      save(); drawPins(); selectPlace(id);
-    }
+    var id = "c" + Date.now();
+    S.custom.push({
+      id: id, he: "מקום חדש", en: "", lat: invLat(v), lng: invLng(u),
+      role: "base", note: "מקום שהוספתם. אפשר לשנות את השם למעלה.", custom: true
+    });
+    save();
     addMode = false;
     document.getElementById("btn-add").classList.remove("on");
     document.getElementById("addhint").hidden = true;
+    selectPlace(id);
+    var f = document.getElementById("pl-name");
+    if (f) { f.focus(); f.select(); }
+    toast("נוסף מקום. תנו לו שם.", function () {
+      S.custom = S.custom.filter(function (x) { return x.id !== id; });
+      S.sel = null; save(); render();
+    });
   });
 
   /* ============ TABS ============ */
@@ -876,55 +1036,72 @@
     h += budgetBarHTML(t);
     h += '</div>';
 
-    var steps = [];
-    steps.push({
-      done: bases.length >= 2, hot: bases.length < 2, n: 1,
-      t: "להחליט על הבסיסים",
-      d: bases.length >= 2
-        ? "נבחרו <b>" + bases.length + "</b> בסיסים. אפשר לשנות בכל רגע בלשונית המסלול."
-        : "זו ההחלטה הראשונה, כי היא קובעת גם את הלינה וגם את הרכבות. לחצו על עיר במפה והוסיפו לה לינה."
-    });
-    steps.push({
-      done: hasTokyoLodge, hot: bases.length >= 1 && !hasTokyoLodge, n: 2,
-      t: "טוקיו: המלון הראשון",
-      d: hasTokyoLodge
-        ? "יש לינה בטוקיו. אפשר לעבור לקיוטו."
-        : "מתחילים מטוקיו כי שם נוחתים. טווח מטרה: <b>¥13,000-18,000</b> ללילה לחדר זוגי במיקום מרכזי."
-    });
-    steps.push({
-      done: kyotoBooked, hot: kyotoChosen && !kyotoBooked, n: 3,
-      t: "קיוטו: להזמין מוקדם",
-      d: kyotoBooked
-        ? "קיוטו מוזמנת ומשולמת. זו הייתה ההזמנה הדחופה ביותר."
-        : "החדרים הטובים בקיוטו נחטפים לעונת השלכת. <b>יעד: לסגור עד ינואר.</b> טווח: <b>¥15,000-25,000</b> ללילה."
-    });
-    steps.push({
-      done: expChosen >= 2, hot: hasTokyoLodge && expChosen < 2, n: 4,
-      t: "חוויות שדורשות הזמנה מראש",
-      d: expChosen >= 2
-        ? "נבחרו <b>" + expChosen + "</b> חוויות."
-        : "ג׳יבלי דורש הזמנה מוקדמת ולעיתים הגרלה. שווה לבדוק מתי נפתחות ההזמנות לתאריכים שלנו."
-    });
-    steps.push({
-      done: trainChosen, hot: bases.length >= 2 && !trainChosen, n: 5,
-      t: "רכבות בין הבסיסים",
-      d: trainChosen
-        ? "יש כרטיסי רכבת בתכנון."
-        : "רק אחרי שהמסלול סגור. במסלול של שניים-שלושה בסיסים כרטיסים בודדים זולים מ-JR Pass."
-    });
-    steps.push({
-      done: t.nights >= TOTAL_NIGHTS, hot: t.nights > 0 && t.nights < TOTAL_NIGHTS, n: 6,
-      t: "לכסות את כל 19 הלילות",
-      d: t.nights >= TOTAL_NIGHTS
-        ? "כל הלילות מכוסים."
-        : "מכוסים <b>" + t.nights + "</b> מתוך <b>" + TOTAL_NIGHTS + "</b> לילות. נותרו <b>" + (TOTAL_NIGHTS - t.nights) + "</b>."
-    });
+    var steps = [
+      {
+        done: bases.length >= 2,
+        t: "להחליט על הבסיסים",
+        d: bases.length >= 2
+          ? "נבחרו <b>" + bases.length + "</b> בסיסים. אפשר לשנות בכל רגע בלשונית המסלול."
+          : "ההחלטה הראשונה, כי היא קובעת גם את הלינה וגם את הרכבות. <b>לחיצה כפולה על עיר במפה בוחרת אותה כבסיס.</b>",
+        go: { tab: "route" }
+      },
+      {
+        done: hasTokyoLodge,
+        t: "טוקיו: המלון הראשון",
+        d: hasTokyoLodge
+          ? "יש לינה בטוקיו. אפשר לעבור לקיוטו."
+          : "מתחילים מטוקיו כי שם נוחתים. טווח מטרה ללילה: " + rangeHTML(13000, 18000) + ".",
+        go: { tab: "place", pid: "tokyo" }
+      },
+      {
+        done: kyotoBooked,
+        t: "קיוטו: להזמין מוקדם",
+        d: kyotoBooked
+          ? "קיוטו מוזמנת ומשולמת. זו הייתה ההזמנה הדחופה ביותר."
+          : "החדרים הטובים בקיוטו נחטפים לעונת השלכת. <b>יעד: לסגור עד ינואר.</b> טווח ללילה: " + rangeHTML(15000, 25000) + ".",
+        go: { tab: "place", pid: "kyoto" }
+      },
+      {
+        done: expChosen >= 2,
+        t: "חוויות שדורשות הזמנה מראש",
+        d: expChosen >= 2
+          ? "נבחרו <b>" + expChosen + "</b> חוויות."
+          : "ג׳יבלי דורש הזמנה מוקדמת ולעיתים הגרלה. שווה לבדוק מתי נפתחות ההזמנות לתאריכים שלנו.",
+        go: { tab: "place", pid: "nagoya" }
+      },
+      {
+        done: trainChosen,
+        t: "רכבות בין הבסיסים",
+        d: trainChosen
+          ? "יש כרטיסי רכבת בתכנון."
+          : "רק אחרי שהמסלול סגור. במסלול של שניים-שלושה בסיסים כרטיסים בודדים זולים מ-JR Pass.",
+        go: { tab: "route" }
+      },
+      {
+        done: t.nights >= TOTAL_NIGHTS,
+        t: "לכסות את כל " + TOTAL_NIGHTS + " הלילות",
+        d: t.nights > TOTAL_NIGHTS
+          ? "<b>שובצו " + t.nights + " לילות, יותר מ-" + TOTAL_NIGHTS + ".</b> שווה לבדוק את חלוקת הלילות."
+          : (t.nights >= TOTAL_NIGHTS
+              ? "כל הלילות מכוסים."
+              : "מכוסים <b>" + t.nights + "</b> מתוך <b>" + TOTAL_NIGHTS + "</b>. נותרו <b>" + (TOTAL_NIGHTS - t.nights) + "</b>."),
+        go: { tab: "route" }
+      }
+    ];
+
+    // the current stage is the first one still open; everything after it dims back
+    var cur = -1;
+    for (var i = 0; i < steps.length; i++) { if (!steps[i].done) { cur = i; break; } }
 
     h += '<div class="card"><h3>סדר הפעולות המומלץ</h3>';
-    steps.forEach(function (s) {
-      h += '<div class="step' + (s.done ? " done" : (s.hot ? " hot" : "")) + '">' +
-           '<span class="ic">' + (s.done ? "✓" : s.n) + '</span>' +
-           '<span class="body"><span class="t">' + s.t + '</span><span class="d">' + s.d + '</span></span></div>';
+    steps.forEach(function (s, i) {
+      var cls = s.done ? "done" : (i === cur ? "current" : "future");
+      h += '<button class="step ' + cls + '" data-go=\'' + JSON.stringify(s.go) + '\'' +
+           (i === cur ? ' aria-current="step"' : '') + '>' +
+           '<span class="ic">' + (s.done ? "✓" : (i + 1)) + '</span>' +
+           '<span class="body"><span class="t">' + s.t +
+           (i === cur ? '<span class="now-chip">עכשיו</span>' : '') + '</span>' +
+           '<span class="d">' + s.d + '</span></span></button>';
     });
     h += '</div>';
 
@@ -939,8 +1116,18 @@
          'אחרי שמשלמים, מסמנים <b>הוזמן ושולם</b> ורושמים כמה שילמנו בפועל. הסכום עובר לעמודת ששולם.</span></span></div>' +
          '</div>';
 
-    h += '<div class="foot">הנתונים נשמרים בדפדפן הזה בלבד.</div>';
+    h += '<div class="foot">כל שינוי נשמר מיד. לשיתוף עם מון, לשונית הסנכרון.</div>';
     el.innerHTML = h;
+
+    el.querySelectorAll(".step[data-go]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var g;
+        try { g = JSON.parse(b.getAttribute("data-go")); } catch (e) { return; }
+        if (!g) return;
+        if (g.pid) { selectPlace(g.pid); }
+        else { setTab(g.tab); render(); }
+      });
+    });
   }
 
   function budgetBarHTML(t) {
@@ -974,18 +1161,22 @@
     var h = '<div class="place-head"><h2>' + p.he + '</h2>' +
             (p.en ? '<span class="en">' + p.en + '</span>' : '') + '</div>';
     if (p.note) h += '<p class="place-note">' + p.note + '</p>';
-    if (p.lo) h += '<div class="pricehint">טווח לינה מקובל כאן: ' + yen(p.lo[0]) + '-' + yen(p.lo[1]) + ' ללילה (' + nis(p.lo[0] / RATE) + '-' + nis(p.lo[1] / RATE) + ')</div>';
+    if (p.lo) h += '<div class="pricehint">טווח לינה מקובל כאן ללילה: ' + rangeHTML(p.lo[0], p.lo[1]) + '</div>';
+
+    if (p.custom) {
+      h += '<label class="fld">שם המקום<input class="in" id="pl-name" value="' + esc(p.he) + '"></label>';
+    }
 
     var mine = S.items.filter(function (i) { return i.pid === p.id; });
     h += '<div class="card"><h3>פריטים במקום הזה</h3>';
-    if (!mine.length) h += '<div class="empty">אין עדיין. הוסיפו למטה.</div>';
+    if (!mine.length) h += '<div class="empty">אין עדיין. הוסיפו למטה, או לחצו לחיצה כפולה על המקום במפה כדי לבחור אותו כבסיס.</div>';
     mine.forEach(function (it) {
       var amt = it.state === "booked" && it.actual != null ? it.actual : it.est;
       h += '<div class="item" data-s="' + it.state + '">' +
         '<div class="r1"><div><div class="nm">' + esc(it.name) + '</div>' +
         '<div class="meta">' + CATS[it.cat].ic + " " + CATS[it.cat].he +
         (it.nights ? " · " + it.nights + " לילות" : "") + '</div></div>' +
-        '<div class="amt">' + nis(amt || 0) + '</div></div>' +
+        '<div class="amt">' + nis(amt || 0) + '<span class="sec" style="display:block;text-align:left">' + yen((amt || 0) * RATE) + '</span></div></div>' +
         '<div class="segbtns" data-item="' + it.id + '">' +
           '<button data-v="idea" aria-pressed="' + (it.state === "idea") + '">רעיון</button>' +
           '<button data-v="chosen" aria-pressed="' + (it.state === "chosen") + '">נבחר</button>' +
@@ -1049,19 +1240,30 @@
         save(); render();
       });
     });
+    var nameFld = document.getElementById("pl-name");
+    if (nameFld) nameFld.addEventListener("change", function () {
+      var v = nameFld.value.trim();
+      if (v) { p.he = v; save(); render(); }
+    });
+
     var addb = document.getElementById("f-add");
     if (addb) addb.addEventListener("click", function () {
-      var nm = document.getElementById("f-name").value.trim();
-      if (!nm) { document.getElementById("f-name").focus(); return; }
-      S.items.push({
+      var nmEl = document.getElementById("f-name"), nm = nmEl.value.trim();
+      if (!nm) { nmEl.focus(); return; }
+      var item = {
         id: "i" + Date.now(), pid: p.id,
         cat: document.getElementById("f-cat").value,
         name: nm,
         est: Number(document.getElementById("f-est").value) || 0,
         nights: Number(document.getElementById("f-nights").value) || 0,
         state: "chosen"
-      });
+      };
+      S.items.push(item);
       save(); render();
+      toast("נוסף: " + nm, function () {
+        S.items = S.items.filter(function (x) { return x.id !== item.id; });
+        save(); render();
+      });
     });
     var dp = document.getElementById("del-place");
     if (dp) dp.addEventListener("click", function () {
@@ -1074,11 +1276,16 @@
   /* ============ RENDER: ROUTE ============ */
   function renderRoute() {
     var el = document.getElementById("p-route"), ids = routeOrder(), t = totals();
+    var over = t.nights > TOTAL_NIGHTS;
     var h = '<div class="card"><h3>כיסוי הלילות</h3>' +
       '<div class="nights-line"><span>מכוסים</span><b>' + t.nights + " / " + TOTAL_NIGHTS + '</b></div>' +
       '<div class="nightbar"><i class="' + (t.nights >= TOTAL_NIGHTS ? "full" : "") + '" style="width:' +
       Math.min(100, (t.nights / TOTAL_NIGHTS) * 100).toFixed(1) + '%"></i></div>';
-    if (t.nights < TOTAL_NIGHTS) h += '<div class="nights-line"><span>נותרו לשבץ</span><b>' + (TOTAL_NIGHTS - t.nights) + ' לילות</b></div>';
+    if (over) {
+      h += '<div class="verdict over">שובצו ' + (t.nights - TOTAL_NIGHTS) + ' לילות יותר מהטיול. שווה לצמצם באחד הבסיסים.</div>';
+    } else if (t.nights < TOTAL_NIGHTS) {
+      h += '<div class="nights-line"><span>נותרו לשבץ</span><b>' + (TOTAL_NIGHTS - t.nights) + ' לילות</b></div>';
+    }
     h += '</div>';
 
     h += '<div class="card"><h3>סדר הבסיסים</h3>';
@@ -1147,20 +1354,15 @@
     h += '<div class="foot" style="border:0">המספרים: בשימוש / תקרת רמה א׳ · תקרת רמה ב׳</div></div>';
 
     h += '<div class="card"><h3>המרה מהירה</h3>' +
-      '<div class="row"><label class="fld">ין<input class="in" type="number" id="cv-y" value="15000" step="500"></label>' +
-      '<label class="fld">שקל<input class="in" type="number" id="cv-n" value="300" step="10"></label></div>' +
-      '<div class="foot" style="border:0">שער תכנון: ¥50 = ₪1</div></div>';
+      '<div class="row"><label class="fld">שקל<input class="in" type="number" id="cv-n" value="300" step="10"></label>' +
+      '<label class="fld">ין<input class="in" type="number" id="cv-y" value="15000" step="500"></label></div>' +
+      '<div class="foot" style="border:0">שער תכנון: ₪1 = ¥50</div></div>';
 
-    h += '<button class="btn ghost" id="reset-all">איפוס כל הנתונים</button>';
     el.innerHTML = h;
 
     var cy = document.getElementById("cv-y"), cn = document.getElementById("cv-n");
     cy.addEventListener("input", function () { cn.value = Math.round((Number(cy.value) || 0) / RATE); });
     cn.addEventListener("input", function () { cy.value = Math.round((Number(cn.value) || 0) * RATE); });
-    document.getElementById("reset-all").addEventListener("click", function () {
-      if (!confirm("לאפס הכל ולחזור להצעות ההתחלתיות?")) return;
-      resetToBaseline(); save(); render();
-    });
   }
 
   /* ============ RENDER: SYNC ============ */
@@ -1303,8 +1505,13 @@
     document.getElementById("s-paid").textContent = nis(t.paid);
     document.getElementById("s-plan").textContent = nis(t.plan);
     var left = TIER.b.total - t.committed;
-    document.getElementById("s-left").textContent = (left < 0 ? "-" : "") + nis(Math.abs(left));
-    document.getElementById("s-nights").textContent = t.nights + "/" + TOTAL_NIGHTS;
+    var leftEl = document.getElementById("s-left");
+    leftEl.textContent = (left < 0 ? "-" : "") + nis(Math.abs(left));
+    leftEl.style.color = left < 0 ? "var(--momiji)" : "";
+    var nEl = document.getElementById("s-nights");
+    nEl.textContent = t.nights + "/" + TOTAL_NIGHTS;
+    nEl.style.color = t.nights > TOTAL_NIGHTS ? "var(--momiji)"
+                    : (t.nights === TOTAL_NIGHTS ? "var(--jade)" : "");
 
     drawPins(); drawRoute();
     if (S.tab === "coach") renderCoach();
