@@ -87,9 +87,13 @@
     font-family: var(--he);
     font-size: 15px;
     line-height: 1.6;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
+  }
+  @media (max-width: 940px) {
+    .app { height: auto; min-height: 100vh; overflow: visible; }
   }
 
   bdi, .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; }
@@ -279,9 +283,11 @@
   .bbar .seg { position: absolute; top: 0; bottom: 0; }
   .bbar .seg.paid { background: var(--jade); right: 0; }
   .bbar .seg.plan { background: repeating-linear-gradient(-45deg, var(--momiji) 0 5px, color-mix(in srgb, var(--momiji) 60%, transparent) 5px 10px); }
-  .tickrow { position: relative; height: 24px; }
-  .tick { position: absolute; top: 0; transform: translateX(50%); font-size: 10px; color: var(--faint); white-space: nowrap; }
-  .tick::before { content: ""; position: absolute; top: -32px; right: 50%; width: 2px; height: 30px; background: var(--text); opacity: .55; }
+  .tickrow { position: relative; height: 38px; }
+  .tick { position: absolute; top: 0; transform: translateX(50%); font-size: 10px; color: var(--faint); white-space: nowrap; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .tick.b { top: 15px; }
+  .tick::before { content: ""; position: absolute; top: -30px; right: 50%; width: 2px; height: 28px; background: var(--text); opacity: .55; }
+  .tick.b::before { height: 43px; top: -45px; }
   .tick.b::before { background: var(--momiji); opacity: .9; }
   .tick.a::before { background: var(--indigo); opacity: .9; }
 
@@ -942,8 +948,8 @@
       '<span class="seg plan" style="width:' + pPlan.toFixed(2) + '%;right:' + pPaid.toFixed(2) + '%"></span>' +
       '</div>' +
       '<div class="tickrow">' +
-      '<span class="tick a" style="right:' + posA.toFixed(2) + '%">רמה א׳ ' + nis(TIER.a.total) + '</span>' +
-      '<span class="tick b" style="right:' + posB.toFixed(2) + '%">רמה ב׳ ' + nis(TIER.b.total) + '</span>' +
+      '<span class="tick a" style="right:' + posA.toFixed(2) + '%">א׳ ' + nis(TIER.a.total) + '</span>' +
+      '<span class="tick b" style="right:' + posB.toFixed(2) + '%">ב׳ ' + nis(TIER.b.total) + '</span>' +
       '</div>' +
       '<div class="verdict ' + cls + '">' + v + '</div>';
   }
