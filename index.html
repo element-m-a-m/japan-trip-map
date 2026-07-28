@@ -171,10 +171,14 @@
   .mapsvg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
   .land { fill: url(#landgrad); stroke: var(--land-edge); stroke-width: 1.6; stroke-linejoin: round; }
   .gridline { stroke: var(--grid); stroke-width: 1; fill: none; }
-  .routeline { fill: none; stroke: var(--momiji); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1 11; opacity: .95; }
+  /* route lines are decoration: clicks pass through them to the map */
+  .routeline { fill: none; stroke: var(--momiji); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1 11; opacity: .95; pointer-events: none; }
   .routeline.solid { stroke-dasharray: none; opacity: .55; stroke-width: 2.4; }
+  .gridline, .shadow-dot { pointer-events: none; }
 
-  .pins { position: absolute; inset: 0; transform-style: preserve-3d; }
+  /* the pin layer must not swallow clicks meant for the map underneath */
+  .pins { position: absolute; inset: 0; transform-style: preserve-3d; pointer-events: none; }
+  .pins .pin { pointer-events: auto; }
 
   .pin {
     position: absolute; transform-origin: 50% 100%;
@@ -275,16 +279,13 @@
     font-size: 11.5px; color: var(--muted); box-shadow: var(--shadow-s);
     backdrop-filter: blur(6px);
   }
-  .legend div { display: flex; align-items: center; gap: 7px; }
+  .legend > div { display: flex; align-items: center; gap: 7px; }
   .legend .sw { width: 10px; height: 10px; border-radius: 50%; flex: none; }
-
-  .addhint {
-    position: absolute; inset-block-start: 12px; inset-inline-end: 12px; z-index: 25;
-    background: var(--ginkgo); color: #16181d;
-    padding: 7px 13px; border-radius: 4px; font-size: 12.5px; font-weight: 700;
-    box-shadow: var(--shadow-m);
+  .legend-hint {
+    display: flex; flex-direction: column; gap: 2px; align-items: flex-start;
+    margin-top: 5px; padding-top: 6px; border-top: 1px solid var(--border);
+    font-size: 10.5px; color: var(--faint);
   }
-  .addhint[hidden] { display: none; }
 
   /* ================= PANEL WIDGETS ================= */
   .card {
@@ -462,6 +463,18 @@
   .rt { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); }
   .rt .ord { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--momiji); width: 18px; flex: none; }
   .rt .nm { flex: 1; font-size: 14px; font-weight: 700; }
+  button.rt-open {
+    background: none; border: 0; padding: 0; text-align: right;
+    font-family: inherit; color: var(--text); cursor: pointer;
+  }
+  button.rt-open:hover { color: var(--indigo); text-decoration: underline; }
+  .rt-x {
+    flex: none; width: 22px; height: 22px; border-radius: 3px;
+    border: 1px solid var(--border); background: var(--surface-2);
+    color: var(--faint); cursor: pointer; font-family: inherit; font-size: 11px;
+    display: grid; place-items: center;
+  }
+  .rt-x:hover { background: var(--momiji); color: #fff; border-color: var(--momiji); }
   .rt .ni { font-family: var(--mono); font-size: 12px; color: var(--muted); direction: ltr; }
   .rt .mv { display: flex; flex-direction: column; gap: 1px; }
   .rt .mv button { width: 20px; height: 15px; font-size: 9px; padding: 0; border: 1px solid var(--border); background: var(--surface-2); color: var(--muted); cursor: pointer; border-radius: 2px; font-family: inherit; }
@@ -518,16 +531,17 @@
         <button id="btn-zin" title="התקרבות">+</button>
         <button id="btn-zout" title="התרחקות">−</button>
         <button id="btn-reset" title="איפוס תצוגה">⟲</button>
-        <button id="btn-add" title="הוספת מקום חדש">📍</button>
       </div>
-
-      <div class="addhint" id="addhint" hidden>לחצו על המפה כדי למקם מקום חדש</div>
 
       <div class="legend">
         <div><span class="sw" style="background:var(--faint)"></span> רעיון</div>
         <div><span class="sw" style="background:var(--momiji)"></span> נבחר</div>
         <div><span class="sw" style="background:var(--jade)"></span> הוזמן ושולם</div>
-        <div style="opacity:.75;padding-top:2px">לחיצה כפולה בוחרת בסיס</div>
+        <div class="legend-hint">
+          <span>לחיצה כפולה על מקום בוחרת ומבטלת</span>
+          <span>לחיצה כפולה על המפה מוסיפה מקום</span>
+          <span>לחיצה על הרקע מבטלת בחירה</span>
+        </div>
       </div>
 
       <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -958,20 +972,43 @@
     });
   }
 
-  /* double-click = adopt this place as a base, with one-tap undo */
+  /* Double-click a place: pick it, or un-pick it. A place you dropped yourself
+     disappears again when un-picked, so dropping and un-dropping are symmetric. */
   function quickPick(pid) {
     var p = place(pid); if (!p) return;
-    var lodge = S.items.filter(function (i) { return i.pid === pid && i.cat === "lodging"; })[0];
+    var mine = S.items.filter(function (i) { return i.pid === pid; });
+    var lodge = mine.filter(function (i) { return i.cat === "lodging"; })[0];
+    var isActive = mine.some(function (i) { return i.state !== "idea"; });
 
-    if (lodge) {
-      var was = lodge.state;
-      lodge.state = (lodge.state === "idea") ? "chosen" : "idea";
+    // un-pick
+    if (isActive) {
+      if (p.custom && mine.length === 1 && lodge) {
+        var snapshotP = Object.assign({}, p), snapshotI = Object.assign({}, lodge);
+        removePlace(pid, true);
+        toast("המקום " + p.he + " הוסר", function () {
+          S.custom.push(snapshotP); S.items.push(snapshotI); save(); render();
+        });
+        return;
+      }
+      var prev = mine.map(function (i) { return { id: i.id, state: i.state }; });
+      mine.forEach(function (i) { i.state = "idea"; });
       save(); render();
-      toast(lodge.state === "chosen" ? p.he + " נבחרה כבסיס" : p.he + " חזרה להיות רעיון",
-            function () { lodge.state = was; save(); render(); });
+      toast(p.he + " כבר לא נבחרת", function () {
+        prev.forEach(function (r) {
+          var it = S.items.filter(function (x) { return x.id === r.id; })[0];
+          if (it) it.state = r.state;
+        });
+        save(); render();
+      });
       return;
     }
 
+    // pick: revive an existing lodging idea, or create one
+    if (lodge) {
+      lodge.state = "chosen"; save(); render();
+      toast(p.he + " נבחרה כבסיס", function () { lodge.state = "idea"; save(); render(); });
+      return;
+    }
     var nights = (p.role === "base") ? 4 : 1;
     var mid = p.lo ? (p.lo[0] + p.lo[1]) / 2 / RATE : 300;
     var item = {
@@ -1032,53 +1069,96 @@
     setTimeout(function () { fitView(); save(); }, 30);
   });
 
-  var drag = null;
+  var drag = null, dragMoved = false;
   plane.addEventListener("pointerdown", function (e) {
-    if (addMode) return;
     drag = { sx: e.clientX, sy: e.clientY, ox: S.view.x, oy: S.view.y };
+    dragMoved = false;
     plane.classList.add("dragging");
     plane.setPointerCapture(e.pointerId);
   });
   plane.addEventListener("pointermove", function (e) {
     if (!drag) return;
-    S.view.x = drag.ox + (e.clientX - drag.sx);
-    S.view.y = drag.oy + (e.clientY - drag.sy);
+    var dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+    if (!dragMoved && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) dragMoved = true;
+    if (!dragMoved) return;
+    S.view.x = drag.ox + dx;
+    S.view.y = drag.oy + dy;
     applyView();
   });
   plane.addEventListener("pointerup", function (e) {
     if (!drag) return;
-    drag = null; plane.classList.remove("dragging"); save();
+    drag = null; plane.classList.remove("dragging");
+    if (dragMoved) save();
     try { plane.releasePointerCapture(e.pointerId); } catch (err) {}
+    // let the click handler read dragMoved, then reset it
+    setTimeout(function () { dragMoved = false; }, 0);
   });
 
-  /* add custom place */
-  var addMode = false;
-  document.getElementById("btn-add").addEventListener("click", function () {
-    addMode = !addMode;
-    this.classList.toggle("on", addMode);
-    document.getElementById("addhint").hidden = !addMode;
-  });
-  svg.addEventListener("click", function (e) {
-    if (!addMode) return;
+  /* Turn a screen point into map coordinates. getScreenCTM accounts for the
+     3D transform on the plane, which a plain bounding-rect ratio would not. */
+  function pointToLatLng(e) {
+    try {
+      var m = svg.getScreenCTM();
+      if (m) {
+        var pt = svg.createSVGPoint();
+        pt.x = e.clientX; pt.y = e.clientY;
+        var loc = pt.matrixTransform(m.inverse());
+        return { lat: invLat(loc.y / VH), lng: invLng(loc.x / VW) };
+      }
+    } catch (err) {}
     var r = svg.getBoundingClientRect();
-    var u = (e.clientX - r.left) / r.width, v = (e.clientY - r.top) / r.height;
+    return { lat: invLat((e.clientY - r.top) / r.height), lng: invLng((e.clientX - r.left) / r.width) };
+  }
+
+  /* double-click on open map = drop a new place, already picked as a base */
+  svg.addEventListener("dblclick", function (e) {
+    e.preventDefault();
+    var c = pointToLatLng(e);
+    if (!isFinite(c.lat) || !isFinite(c.lng)) return;
     var id = "c" + Date.now();
     S.custom.push({
-      id: id, he: "מקום חדש", en: "", lat: invLat(v), lng: invLng(u),
-      role: "base", note: "מקום שהוספתם. אפשר לשנות את השם למעלה.", custom: true
+      id: id, he: "מקום חדש", en: "", lat: c.lat, lng: c.lng,
+      role: "base", note: "מקום שהוספתם. אפשר לשנות את השם ואת הפרטים כאן.", custom: true
     });
-    save();
-    addMode = false;
-    document.getElementById("btn-add").classList.remove("on");
-    document.getElementById("addhint").hidden = true;
-    selectPlace(id);
+    S.items.push({
+      id: "i" + Date.now(), pid: id, cat: "lodging",
+      name: "לינה במקום חדש", nights: 1, est: 300, state: "chosen"
+    });
+    save(); selectPlace(id);
     var f = document.getElementById("pl-name");
     if (f) { f.focus(); f.select(); }
-    toast("נוסף מקום. תנו לו שם.", function () {
-      S.custom = S.custom.filter(function (x) { return x.id !== id; });
-      S.sel = null; save(); render();
-    });
+    toast("נוסף מקום. תנו לו שם.", function () { removePlace(id, true); });
   });
+
+  /* click on open map = clear the selection (unless it was really a drag) */
+  svg.addEventListener("click", function () {
+    if (dragMoved) return;
+    if (S.sel !== null) { S.sel = null; render(); }
+  });
+
+  /* remove a custom place and everything attached to it */
+  function removePlace(pid, silent) {
+    var p = place(pid);
+    S.custom = S.custom.filter(function (x) { return x.id !== pid; });
+    S.items = S.items.filter(function (x) { return x.pid !== pid; });
+    delete S.order[pid];
+    if (S.sel === pid) S.sel = null;
+    save(); render();
+    if (!silent && p) toast("המקום " + p.he + " הוסר");
+  }
+
+  /* strip every item from a built-in place, returning it to unselected */
+  function clearPlace(pid) {
+    var removed = S.items.filter(function (x) { return x.pid === pid; });
+    if (!removed.length) return;
+    S.items = S.items.filter(function (x) { return x.pid !== pid; });
+    delete S.order[pid];
+    save(); render();
+    toast("נוקה " + (place(pid) ? place(pid).he : ""), function () {
+      removed.forEach(function (r) { S.items.push(r); });
+      save(); render();
+    });
+  }
 
   /* ============ TABS ============ */
   var TABS = ["coach", "place", "route", "budget", "sync"];
@@ -1225,7 +1305,17 @@
   /* ============ RENDER: PLACE ============ */
   function renderPlace() {
     var el = document.getElementById("p-place");
-    if (!S.sel) { el.innerHTML = '<div class="empty">לחצו על מקום במפה כדי לפתוח אותו.</div>'; return; }
+    if (!S.sel) {
+      el.innerHTML = '<div class="card"><h3>לא נבחר מקום</h3>' +
+        '<div class="step"><span class="ic">1</span><span class="body"><span class="d">' +
+        '<b>לחיצה</b> על מקום במפה פותחת אותו כאן.</span></span></div>' +
+        '<div class="step"><span class="ic">2</span><span class="body"><span class="d">' +
+        '<b>לחיצה כפולה</b> על מקום בוחרת אותו כבסיס, ולחיצה כפולה נוספת מבטלת.</span></span></div>' +
+        '<div class="step"><span class="ic">3</span><span class="body"><span class="d">' +
+        '<b>לחיצה כפולה על המפה</b> מוסיפה מקום חדש במקום שלחצתם.</span></span></div>' +
+        '</div>';
+      return;
+    }
     var p = place(S.sel);
     if (!p) { el.innerHTML = '<div class="empty">המקום לא נמצא.</div>'; return; }
 
@@ -1275,9 +1365,27 @@
       '</div>' +
       '<button class="btn primary" id="f-add">הוספה</button></div>';
 
-    if (p.custom) h += '<button class="btn ghost" id="del-place">מחיקת המקום הזה מהמפה</button>';
+    var active = mine.some(function (i) { return i.state !== "idea"; });
+    h += '<div class="card"><h3>פעולות על המקום</h3>' +
+      '<button class="btn' + (active ? "" : " primary") + '" id="pl-toggle">' +
+        (active ? "ביטול הבחירה במקום הזה" : "בחירת המקום כבסיס") + '</button>' +
+      '<button class="btn ghost" id="pl-deselect">סגירה וחזרה למפה</button>' +
+      (mine.length ? '<button class="btn ghost" id="pl-clear">הסרת כל הפריטים כאן</button>' : '') +
+      (p.custom ? '<button class="btn ghost" id="pl-del">מחיקת המקום מהמפה</button>' : '') +
+      '</div>';
 
     el.innerHTML = h;
+
+    document.getElementById("pl-toggle").addEventListener("click", function () { quickPick(p.id); });
+    document.getElementById("pl-deselect").addEventListener("click", function () {
+      S.sel = null; setTab("coach"); render();
+    });
+    var clr = document.getElementById("pl-clear");
+    if (clr) clr.addEventListener("click", function () { clearPlace(p.id); });
+    var delp = document.getElementById("pl-del");
+    if (delp) delp.addEventListener("click", function () {
+      if (confirm("למחוק את " + p.he + " ואת כל מה שמשויך אליו?")) removePlace(p.id);
+    });
 
     el.querySelectorAll(".segbtns button").forEach(function (b) {
       b.addEventListener("click", function () {
@@ -1336,12 +1444,6 @@
         save(); render();
       });
     });
-    var dp = document.getElementById("del-place");
-    if (dp) dp.addEventListener("click", function () {
-      S.custom = S.custom.filter(function (x) { return x.id !== p.id; });
-      S.items = S.items.filter(function (x) { return x.pid !== p.id; });
-      S.sel = null; save(); render();
-    });
   }
 
   /* ============ RENDER: ROUTE ============ */
@@ -1361,19 +1463,20 @@
 
     h += '<div class="card"><h3>סדר הבסיסים</h3>';
     if (!ids.length) {
-      h += '<div class="empty">עוד אין בסיסים. בסיס נוצר כשמוסיפים לינה למקום כלשהו.</div>';
+      h += '<div class="empty">אין בסיסים כרגע. לחיצה כפולה על מקום במפה בוחרת אותו כבסיס.</div>';
     } else {
       ids.forEach(function (id, i) {
         var p = place(id);
         var n = S.items.filter(function (x) { return x.pid === id && x.cat === "lodging" && x.state !== "idea"; })
                        .reduce(function (a, x) { return a + (Number(x.nights) || 0); }, 0);
         h += '<div class="rt"><span class="ord">' + (i + 1) + '</span>' +
-             '<span class="nm">' + p.he + '</span>' +
+             '<button class="nm rt-open" data-open="' + id + '">' + esc(p.he) + '</button>' +
              '<span class="ni">' + n + ' לילות</span>' +
              '<span class="mv"><button data-up="' + id + '" title="למעלה">▲</button>' +
-             '<button data-dn="' + id + '" title="למטה">▼</button></span></div>';
+             '<button data-dn="' + id + '" title="למטה">▼</button></span>' +
+             '<button class="rt-x" data-off="' + id + '" title="ביטול הבחירה">✕</button></div>';
       });
-      h += '<div class="foot" style="border:0;padding-top:2px">הקו הכתום במפה עובר לפי הסדר הזה.</div>';
+      h += '<div class="foot" style="border:0;padding-top:2px">הקו הכתום במפה עובר לפי הסדר הזה. ✕ מבטל בחירה.</div>';
     }
     h += '</div>';
 
@@ -1396,6 +1499,12 @@
         list.forEach(function (x, k) { S.order[x] = k; });
         save(); render();
       });
+    });
+    el.querySelectorAll("[data-open]").forEach(function (b) {
+      b.addEventListener("click", function () { selectPlace(b.getAttribute("data-open")); });
+    });
+    el.querySelectorAll("[data-off]").forEach(function (b) {
+      b.addEventListener("click", function () { quickPick(b.getAttribute("data-off")); });
     });
   }
 
@@ -1479,7 +1588,11 @@
       '<input type="file" id="sy-imp" accept=".json,application/json" style="display:none"></label>' +
       '<button class="btn ghost" id="sy-copy">העתקה ללוח</button></div>';
 
-    h += '<button class="btn ghost" id="sy-reset">חזרה להצעות ההתחלתיות</button>';
+    h += '<div class="card"><h3>התחלה מחדש</h3>' +
+      '<button class="btn ghost" id="sy-reset">חזרה להצעות ההתחלתיות</button>' +
+      '<button class="btn ghost" id="sy-empty">ניקוי הכל, מפה ריקה</button>' +
+      '<div class="foot" style="border:0;text-align:right">מפה ריקה מוחקת את כל הפריטים ואת המקומות שהוספתם, ומשאירה רק את הטיסות ששולמו.</div>' +
+      '</div>';
     el.innerHTML = h;
 
     var pubb = document.getElementById("sy-pub");
@@ -1563,8 +1676,14 @@
     });
 
     document.getElementById("sy-reset").addEventListener("click", function () {
-      if (!confirm("לחזור לגרסה המשותפת? כל שינוי מקומי שלא יוצא יימחק.")) return;
+      if (!confirm("לחזור להצעות ההתחלתיות? כל שינוי מקומי שלא פורסם יימחק.")) return;
       resetToBaseline(); save(); render();
+    });
+    document.getElementById("sy-empty").addEventListener("click", function () {
+      if (!confirm("לנקות הכל ולהתחיל ממפה ריקה?")) return;
+      S.items = []; S.custom = []; S.order = {}; S.sel = null;
+      save(); render();
+      toast("המפה ריקה. אפשר להתחיל מאפס.");
     });
   }
 
